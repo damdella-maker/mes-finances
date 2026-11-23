@@ -231,6 +231,20 @@ nav button.on{background:#fafafa;color:#09090b;box-shadow:none}nav button.on svg
 .btn{background:#fafafa;color:#09090b;box-shadow:none;border-radius:14px}
 .tile-donut svg{max-width:220px;margin:0 auto}
 
+
+/* v7 */
+.sl{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--mut);margin:12px 0 4px}.sl b{color:var(--txt,#fff);font-size:16px}
+input[type=range]{width:100%;accent-color:#a5b4fc;height:28px}
+.simo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.simo>div{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:11px 12px}
+.simo .l{font-size:11.5px;color:var(--mut)}.simo .v{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:2px 0}
+details.hyp{margin-top:10px}details.hyp summary{font-size:13px;color:var(--mut);cursor:pointer}
+details.manf>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer}details.manf>summary::-webkit-details-marker{display:none}
+details.manf>summary>span:first-child{display:flex;flex-direction:column;gap:3px}details.manf .chev{font-size:22px;color:var(--mut);transition:transform .2s}details.manf[open] .chev{transform:rotate(90deg)}
+#manForm{display:flex;flex-direction:column;gap:10px;margin-top:14px}#manForm .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#manForm label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--mut)}
+#manForm input,#manForm select{width:100%;box-sizing:border-box;padding:12px;border-radius:13px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:inherit;font:inherit;font-size:16px;min-height:46px}
+#manForm select option{background:#111}#manForm .btn{padding:13px}
+.del{display:block;margin:4px 0 0 auto;border:1px solid rgba(255,93,120,.35);background:transparent;color:var(--neg);border-radius:999px;font-size:11.5px;padding:3px 10px;font-weight:600}
 </style>
 </head>
 <body>
@@ -337,6 +351,7 @@ async function unlock(code, remember, silent) {
       if (!silent) { err.textContent = 'Code incorrect.'; const f = $('#lockForm'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); }
       localStorage.removeItem(LS_KEY); return false;
     }
+    RAW = D; MKEY = await deriveMKey(code); MANUEL = await loadManuel(); D = applyManual(clone(RAW));
     if (remember) localStorage.setItem(LS_KEY, code); else if (!silent) localStorage.removeItem(LS_KEY);
     $('#code').value = '';
     $('#lock').classList.add('hidden'); $('#app').classList.remove('hidden');
@@ -347,7 +362,7 @@ async function unlock(code, remember, silent) {
 $('#lockForm').addEventListener('submit', (e) => { e.preventDefault(); const c = $('#code').value; if (c) unlock(c, $('#remember').checked, false); });
 $('#lockBtn').addEventListener('click', () => {
   if (localStorage.getItem(LS_KEY) && !confirm('Verrouiller et oublier le code sur cet appareil ?')) return;
-  localStorage.removeItem(LS_KEY); D = null;
+  localStorage.removeItem(LS_KEY); D = null; RAW = null; MKEY = null; MANUEL = []; SIM = null;
   document.querySelectorAll('.view').forEach((v) => (v.innerHTML = ''));
   $('#app').classList.add('hidden'); $('#lock').classList.remove('hidden'); $('#remember').checked = false;
 });
@@ -399,7 +414,7 @@ function lineChart(opts) {
   const all = series.flatMap((s) => s.pts);
   const xs = all.map((p) => pd(p[0]).getTime()), ys = all.map((p) => p[1]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs);
-  let y0 = Math.min(0, ...ys), y1 = niceMax(Math.max(...ys)); if (y0 < 0) y0 = -niceMax(-y0);
+  let y0 = Math.min(0, ...ys), y1 = Math.max(...ys) <= 0 ? 0 : niceMax(Math.max(...ys)); if (y0 < 0) y0 = -niceMax(-y0);
   const X = (t) => L + (W - L - R) * (x1 === x0 ? 0.5 : (t - x0) / (x1 - x0));
   const Y = (v) => T + (H - T - B) * (1 - (v - y0) / (y1 - y0));
   let defs = '', g = '';
@@ -419,12 +434,15 @@ function lineChart(opts) {
       g += `<path class="areaf" d="${path}V${H - B}H${pts[0][0]}Z" fill="url(#${id}a)"/>`;
     }
     defs += `<filter id="${id}f${si}" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>`;
+    if (s.dash) g += `<path class="areaf" d="${path}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".95"/>`;
+    else {
     g += `<path class="draw" pathLength="1" d="${path}" fill="none" stroke="${s.color}" stroke-width="5" opacity=".35" filter="url(#${id}f${si})"/>`;
-    g += `<path class="draw" pathLength="1" d="${path}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g += `<path class="draw" pathLength="1" d="${path}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`; }
     const lp = pts[pts.length - 1]; g += `<circle class="areaf" cx="${lp[0]}" cy="${lp[1]}" r="6" fill="${s.color}" opacity=".25"/><circle class="areaf" cx="${lp[0]}" cy="${lp[1]}" r="3.2" fill="${s.color}"/>`;
     if (opts.dots) pts.forEach((p) => (g += `<circle class="areaf" cx="${p[0]}" cy="${p[1]}" r="2.4" fill="${s.color}"/>`));
   });
-  const lg = series.length > 1 ? `<div class="legend">${series.map((s) => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>` : '';
+  if (opts.marker) { const mx = X(pd(opts.marker).getTime()); g += `<line x1="${mx}" x2="${mx}" y1="${T}" y2="${H - B}" stroke="rgba(255,255,255,.3)" stroke-dasharray="2 3"/><text x="${mx + 4}" y="${T + 8}" style="font-size:9px">auj.</text>`; }
+  const lg = series.length > 1 ? `<div class="legend">${series.map((s) => `<span><i style="background:${s.color}${s.dash ? ';opacity:.7' : ''}"></i>${esc(s.name)}${s.dash ? ' ┄' : ''}</span>`).join('')}</div>` : '';
   return `<svg viewBox="0 0 ${W} ${H}" role="img"><defs>${defs}</defs>${g}</svg>${lg}`;
 }
 const PAL = ['#818cf8', '#fb923c', '#34d399', '#c084fc', '#facc15', '#f87171', '#38bdf8', '#f472b6', '#a3e635', '#818cf8', '#2dd4bf', '#fbbf24', '#94a3b8', '#e879f9', '#fb7185', '#67e8f9', '#cbd5e1'];
@@ -452,7 +470,7 @@ const ST = { budget: { mode: 'budgets', vue: 'releves', catp: 'moy', bilan: null
 function render() {
   $('#dataDate').textContent = 'Données au ' + fdate(D.donnees_au);
   ST.budget.bilan = ST.budget.bilan || (D.bilans.length ? D.bilans[D.bilans.length - 1].id : null);
-  renderAccueil(); renderBudget(); renderPrlv(); renderPat(); renderOps('all', '');
+  renderAccueil(); renderBudget(); renderPrlv(); bindSim(); renderPat(); renderOps(ST.opsf || 'all', '');
   let t = 'accueil'; try { t = sessionStorage.getItem('mf-tab') || 'accueil'; } catch (e) {}
   show(t);
 }
@@ -481,7 +499,7 @@ function renderAccueil() {
   const M = D.moyennes, E = D.estimation, ep = D.epargne, P = D.projection, B = D.budgets, C = D.conseils;
   const since = new Date(pd(D.donnees_au).getTime() - 45 * 864e5).toISOString().slice(0, 10);
   let spark = D.serie_solde.filter((p) => p[0] >= since); if (spark.length < 2) spark = D.serie_solde;
-  const pend = (D.en_cours || []).concat((D.a_venir || []).map((x) => ({ ...x, avenir: true })));
+  const pend = (D.en_cours || []).concat((D.a_venir || []).map((x) => ({ ...x, avenir: true }))).concat(manActifs().map((e) => ({ libelle: e.libelle, montant: -e.montant, date: e.date, avenir: true, note: 'saisie manuelle · ' + e.categorie })));
   const eq = M.equilibre;
   const projPts = P.points.map((p) => [p[0], p[1]]);
   const nbOver = (D.alertes_budget || []).filter((a) => a.niveau === 'rouge').length, nbWarn = (D.alertes_budget || []).filter((a) => a.niveau === 'orange').length;
@@ -491,7 +509,7 @@ function renderAccueil() {
     <div class="big ${D.solde < 0 ? 'g-neg' : 'g-acc'}"><span class="num">${splitEur(D.solde)}</span></div>
     <div class="meta">Solde au ${fdate(D.solde_date)}</div>
     <div class="chips2">
-      ${D.en_cours && D.en_cours.length ? `<span class="chip">Avec carte en cours <b class="num">${eur(D.solde_dispo)}</b></span>` : ''}
+      ${(D.en_cours && D.en_cours.length) || D.manuel_total ? `<span class="chip">${D.manuel_total ? 'Avec en cours et saisies' : 'Avec carte en cours'} <b class="num">${eur(D.solde_dispo)}</b></span>` : ''}
       <span class="chip">Fin ${esc(E.mois.split(' ')[0])} <b class="num ${cls(E.solde_apres_prelevements)}">${eur(E.solde_apres_prelevements)}</b></span>
     </div>
     ${lineChart({ series: [{ pts: spark, color: '#a5b4fc' }], step: true, area: true, bare: true, h: 70 })}
@@ -542,8 +560,10 @@ function renderAccueil() {
     <div class="metric"><div class="ic" style="background:${eq < 0 ? 'rgba(255,93,120,.15)' : 'rgba(46,230,166,.14)'};color:${eq < 0 ? 'var(--neg)' : 'var(--pos)'}">${ICON.scale}</div><div class="l">Équilibre mensuel</div><div class="v">${cu(eq, 'eurS0', glow(eq))}</div><div class="d">moyenne, charges et courses incluses</div></div>
   </div>
   ${bentoDonut()}
-  <div class="card"><h3>Évolution du solde</h3><p class="sub">Après chaque opération, du ${fdate(D.serie_solde[0][0])} au ${fdate(D.donnees_au)}.</p>${lineChart({ series: [{ pts: D.serie_solde, color: '#818cf8' }], step: true, area: true })}</div>
+  ${cagTile()}
+  ${douzeHtml()}
   <div class="foot">${D.regles.map(esc).join('<br>')}<br>Mis à jour le ${esc(D.genere_le.replace('T', ' à '))}</div>`;
+  bindSeg($('#v-accueil'), 'm12', (v) => { ST.m12 = v; renderAccueil(); });
 }
 /* ---- Budget tab ---- */
 function renderBudget() {
@@ -701,6 +721,7 @@ function renderPrlv() {
     ${D.crd_series.length > 2 ? lineChart({ series, h: 170 }) : ''}
     <p class="sub" style="margin:8px 0 0">Courbes recalculées à partir du taux et de la durée ; la ligne à échéance progressive est approximative.</p></div>
   ${PD.map(loanCard).join('')}
+  ${simHtml()}
   ${D.assurance_pret ? `<p class="sub" style="margin:-4px 6px 14px">Assurance de prêt : ${eur(D.assurance_pret.montant_mensuel)}/mois, comptée avec les assurances.</p>` : ''}
   <div class="card"><h3>Logement</h3><p class="sub">Prêt immobilier, ta part des charges (eau, gaz, copropriété via la cagnotte Livret A) et assurances.</p>
     <div class="bignum">${cu(Lg.total, 'eur')}<span class="mut" style="font-size:15px;font-weight:550;letter-spacing:0"> / mois</span></div>
@@ -726,8 +747,8 @@ function renderPrlv() {
 const TCOL = { immobilier: '#818cf8', liquidites: '#38bdf8', epargne: '#34d399', societe: '#c084fc', autre: '#facc15', personnel: '#fb923c' };
 function renderPat() {
   const root = $('#v-epargne'), S = ST.pat;
-  let body = S.mode === 'objectifs' ? objectifsHtml() : S.mode === 'livrets' ? livretsHtml() : patrimoineHtml();
-  root.innerHTML = `<h2>Patrimoine</h2>${seg('pmode', [['patrimoine', 'Patrimoine'], ['objectifs', 'Objectifs'], ['livrets', 'Livrets']], S.mode)}${body}`;
+  let body = S.mode === 'objectifs' ? objectifsHtml() : S.mode === 'livrets' ? livretsHtml() : S.mode === 'cagnotte' ? cagnotteHtml() : patrimoineHtml();
+  root.innerHTML = `<h2>Patrimoine</h2>${seg('pmode', [['patrimoine', 'Patrimoine'], ['objectifs', 'Objectifs'], ['cagnotte', 'Cagnotte'], ['livrets', 'Livrets']], S.mode)}${body}`;
   bindSeg(root, 'pmode', (v) => { S.mode = v; renderPat(); });
 }
 function patrimoineHtml() {
@@ -765,13 +786,54 @@ function objectifsHtml() {
   <p class="foot">Les objectifs « Épargne de précaution » et « LEP » avancent avec le même virement mensuel.</p>`;
 }
 function cagnotteHtml() {
-  const G = D.cagnotte; if (!G) return ''; const cg = G.prochain_appel;
-  return `<div class="card"><h3>${esc(G.nom)} · ${esc(G.compte)}</h3><p class="sub">${eur(G.apport_mensuel.toi, 1)} toi + ${eur(G.apport_mensuel.partenaire, 1)} ${esc(LB().partage)} par mois · paie ${esc(G.paie)}. Pas un objectif d’épargne.</p>
-    <div class="bignum">${cu(G.solde, 'eur')}</div>
-    ${cg ? `<div class="kv"><span>Prochain appel copro vers le ${fshort(cg.date)}</span><b class="num neg">≈ ${eurS(-cg.estime, 1)}</b></div><div class="kv"><span>Solde prévu avant (+ ${cg.versements_d_ici_la} × 300 €)</span><b class="num">${eur(cg.solde_prevu_avant, 1)}</b></div>${cg.manque ? `<div class="kv"><span>Il manquerait</span><b class="num neg">≈ ${eur(cg.manque, 1)}</b></div>` : ''}` : ''}
-    <div class="daysep">Entrées et sorties</div>
-    ${G.mouvements.map((x) => `<div class="row">${av(x.qui === 'partenaire' ? 'E' : x.qui === 'sortie' ? 'SY' : 'D', x.qui === 'sortie' ? '#f87171' : x.qui === 'partenaire' ? '#c084fc' : '#34d399')}<div class="main"><div class="t">${esc(x.libelle)}</div><div class="s">${fdate(x.date)}</div></div><div class="amt num ${x.montant < 0 ? 'neg' : 'pos'}">${eurS(x.montant)}</div></div>`).join('')}</div>`;
+  const G = D.cagnotte; if (!G) return ''; const cg = G.prochain_appel, Pn = LB().partage || 'partenaire', C = G.cumul, MO = G.mois || [];
+  const nbFlags = MO.reduce((a, r) => a + r.flags.length, 0);
+  const cell = (v, cur) => `<td class="${v < 149.99 ? (cur && v <= 0 ? 'mut' : 'neg') : 'pos'}">${eur(v, 1)}</td>`;
+  return `<div class="card hero" style="border-color:rgba(192,132,252,.3);background:radial-gradient(120% 140% at 100% 0%,rgba(192,132,252,.22),transparent 55%),linear-gradient(160deg,#16112a,#0b0f1d)">
+    <div class="lbl"><span>${esc(G.nom)} · ${esc(G.compte)}</span><span class="badge b" style="margin:0">au ${fdate(G.date)}</span></div>
+    <div class="big g-acc"><span class="num">${splitEur(G.solde)}</span></div>
+    <div class="chips2"><span class="chip">Toi <b class="num">${eur(G.apport_mensuel.toi, 1)}/mois</b></span><span class="chip">${esc(Pn)} <b class="num">${eur(G.apport_mensuel.partenaire, 1)}/mois</b></span></div>
+    ${cg ? `<div class="meta" style="margin-top:12px">Prochain appel de copropriété vers le ${fdate(cg.date)} : ≈ ${eur(cg.estime, 1)}. ${cg.manque ? `Il manquerait <b class="num neg">≈ ${eur(cg.manque, 1)}</b> si rien d’autre n’est versé.` : 'La cagnotte devrait suffire.'}</div>` : ''}
+  </div>
+  ${cg ? `<div class="card"><h3>Avant l’appel du ${fshort(cg.date)}</h3><p class="sub">Solde actuel + versements prévus d’ici là, face au montant estimé (dernier appel payé).</p>
+    ${hbars([{ l: 'Prévu sur la cagnotte', v: cg.solde_prevu_avant }, { l: 'Appel estimé', v: cg.estime }], (v) => eur(v, 1))}
+    <div class="kv"><span>Solde au ${fdate(G.date)}</span><b class="num">${eur(G.solde)}</b></div>
+    <div class="kv"><span>Versements attendus d’ici là (${cg.versements_d_ici_la} × ${eur(G.apport_mensuel.total, 1)})</span><b class="num pos">${eurS(cg.solde_prevu_avant - G.solde)}</b></div>
+    <div class="kv total"><span><b>${cg.manque ? 'Il manquerait' : 'Reste après l’appel'}</b></span><b class="num ${cg.manque ? 'neg' : 'pos'}">${cg.manque ? '≈ ' + eur(cg.manque, 1) : eur(cg.solde_prevu_avant - cg.estime, 1)}</b></div>
+    ${cg.manque ? `<p class="sub" style="margin:8px 0 0">Soit ≈ ${eur(cg.manque / 2, 1)} chacun à ajouter avant le ${fshort(cg.date)}.</p>` : ''}</div>` : ''}
+  ${MO.length ? `<div class="card"><h3>Qui a versé quoi</h3><p class="sub">${eur(G.apport_mensuel.toi, 1)} attendus de chacun par mois${nbFlags ? ` · <span class="warn">${nbFlags} point${nbFlags > 1 ? 's' : ''} à vérifier</span>` : ''}</p>
+    <div class="scroll"><table><tr><th>Mois</th><th>Toi</th><th>${esc(Pn)}</th><th>Versé</th></tr>
+    ${MO.map((r) => `<tr><td>${esc(r.label)}</td>${cell(r.toi, r.en_cours)}${cell(r.partenaire, r.en_cours)}<td>${eur(r.verse, 1)}</td></tr>${r.flags.length ? `<tr><td colspan="4" style="padding-top:0">${r.flags.map((f) => `<span class="badge ${r.en_cours ? 'w' : 'r'}">${esc(f)}</span>`).join(' ')}</td></tr>` : ''}`).join('')}
+    <tr><td><b>Cumul</b></td><td class="${cls(C.ecart_toi)}"><b>${eur(C.toi, 1)}</b></td><td class="${cls(C.ecart_partenaire)}"><b>${eur(C.partenaire, 1)}</b></td><td><b>${eur(C.verse, 1)}</b></td></tr></table></div>
+    <div class="kv"><span>Attendu de chacun depuis ${esc(MO[0].label.toLowerCase())}</span><b class="num">${eur(C.attendu_chacun, 1)}</b></div>
+    <div class="kv"><span>Écart toi</span><b class="num ${cls(C.ecart_toi)}">${eurS(C.ecart_toi, 1)}</b></div>
+    <div class="kv"><span>Écart ${esc(Pn)}</span><b class="num ${cls(C.ecart_partenaire)}">${eurS(C.ecart_partenaire, 1)}</b></div>
+    <p class="sub" style="margin:8px 0 0">${esc(G.methode || '')}</p></div>` : ''}
+  <div class="card"><h3>Entrées et sorties</h3>
+    ${G.mouvements.map((x) => `<div class="row">${av(x.qui === 'partenaire' ? Pn : x.qui === 'sortie' ? 'SY' : 'Toi', x.qui === 'sortie' ? '#f87171' : x.qui === 'partenaire' ? '#c084fc' : '#34d399')}<div class="main"><div class="t">${esc(x.libelle)}</div><div class="s">${fdate(x.date)}</div></div><div class="amt num ${x.montant < 0 ? 'neg' : 'pos'}">${eurS(x.montant)}</div></div>`).join('')}</div>`;
 }
+function cagTile() {
+  const G = D.cagnotte; if (!G) return ''; const cg = G.prochain_appel, nb = (G.mois || []).reduce((a, r) => a + r.flags.length, 0);
+  return `<div class="card" ${goto('epargne', "ST.pat.mode='cagnotte';renderPat()")} style="cursor:pointer"><h3>Cagnotte charges</h3><p class="sub">${esc(G.compte)} · avec ${esc(LB().partage || '')}${nb ? ` · <span class="warn">${nb} versement${nb > 1 ? 's' : ''} à vérifier</span>` : ''}</p>
+    <div class="bignum">${cu(G.solde, 'eur')}</div>
+    ${cg ? `<div class="kv"><span>Appel copro ≈ ${fshort(cg.date)}</span><b class="num">≈ ${eur(cg.estime, 1)}</b></div>${cg.manque ? `<div class="kv"><span>Il manquerait</span><b class="num neg">≈ ${eur(cg.manque, 1)}</b></div>` : ''}` : ''}</div>`;
+}
+function douzeHtml() {
+  const T = D.douze_mois; if (!T) return '';
+  const mode = ST.m12 || 'solde', last = (a) => a[a.length - 1];
+  const S = mode === 'solde'
+    ? [{ name: 'Historique', color: '#818cf8', pts: T.solde_hist }, { name: 'En tenant tes budgets', color: '#34d399', pts: T.solde_budgets, dash: true }, { name: 'Au rythme habituel', color: '#f87171', pts: T.solde_habitudes, dash: true }]
+    : [{ name: 'Historique', color: '#818cf8', pts: T.patrimoine_hist }, { name: 'Prêts seuls', color: '#34d399', pts: T.patrimoine_prets, dash: true }, { name: 'Prêts + rythme budgets', color: '#c084fc', pts: T.patrimoine_budgets, dash: true }];
+  const lbl = (d) => MOIS[pd(d).getMonth()] + ' ' + pd(d).getFullYear();
+  return `<div class="card"><h3>Sur 12 mois</h3><p class="sub">${mode === 'solde' ? `Solde du compte : réel depuis le ${fdate(T.debut)}, puis estimé en fin de mois (pointillés).` : 'Patrimoine net : reconstitué aux dates de relevé, puis projeté (pointillés).'}</p>
+    ${seg('m12', [['solde', 'Solde du compte'], ['patrimoine', 'Patrimoine net']], mode)}
+    ${lineChart({ series: S, area: true, marker: T.aujourdhui, h: 190 })}
+    <div class="kv"><span>Aujourd’hui</span><b class="num">${eur(mode === 'solde' ? D.solde_dispo : last(T.patrimoine_hist)[1], 1)}</b></div>
+    ${S.slice(1).map((x) => `<div class="kv"><span><i style="display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:8px;background:${x.color}"></i>${esc(x.name)} · ${lbl(last(x.pts)[0])}</span><b class="num ${cls(last(x.pts)[1])}">${eurS(last(x.pts)[1], 1)}</b></div>`).join('')}
+    ${mode === 'solde' ? `<div class="kv"><span>Par mois</span><b class="num">${eurS(T.delta_budgets, 1)} / ${eurS(T.delta_habitudes, 1)}</b></div>` : ''}
+    <details class="hyp"><summary>Hypothèses (estimations)</summary><p class="sub">${esc(T.hypotheses)}</p></details></div>`;
+}
+
 function livretsHtml() {
   const E = D.epargne, pts = E.points, v = E.variation || {}, flux = E.flux, sd = E.sans_detail;
   return `<div class="card hero" style="border-color:rgba(46,230,166,.28);background:radial-gradient(120% 140% at 100% 0%,rgba(46,230,166,.22),transparent 55%),radial-gradient(120% 120% at 0% 100%,rgba(107,140,255,.18),transparent 55%),linear-gradient(160deg,#0f1d1c,#0b0f1d)">
@@ -780,7 +842,7 @@ function livretsHtml() {
     <div class="chips2"><span class="chip">Livret A (cagnotte charges) <b class="num">${eur(E.livret_a)}</b></span><span class="chip">Parts sociales <b class="num">${eur(E.parts_sociales, 1)}</b></span></div>
     ${v.total ? `<div class="meta" style="margin-top:12px">Épargne nette depuis le ${fdate(pts[0].date)} : <b class="num ${glow(v.total.net)}">${eurS(v.total.net)}</b></div>` : ''}
   </div>
-  ${cagnotteHtml()}
+  <div class="card" ${goto('epargne', "ST.pat.mode='cagnotte';renderPat()")} style="cursor:pointer"><h3>Livret A · cagnotte charges</h3><p class="sub">Qui a versé quoi, prochain appel de copropriété : onglet Cagnotte ›</p></div>
   <div class="card"><h3>Évolution des livrets</h3><p class="sub">Soldes aux dates connues.</p>
   ${lineChart({ dots: true, series: [{ name: 'Total', color: '#34d399', pts: pts.map((p) => [p.date, p.total]) }, { name: 'LEP', color: '#818cf8', pts: pts.map((p) => [p.date, p.lep]) }, { name: 'Livret A', color: '#fb923c', pts: pts.map((p) => [p.date, p.livret_a]) }] })}</div>
   <div class="card"><h3>Versements et retraits</h3><p class="sub">Mouvements entre ton compte et tes livrets (ni revenus ni dépenses).</p>
@@ -793,7 +855,153 @@ function livretsHtml() {
   ${v.note ? `<p class="sub" style="margin:10px 0 0">${esc(v.note)}</p>` : ''}</div>
   <div class="card"><h3>Points à confirmer</h3>${E.doutes.map((n) => `<p class="sub" style="margin:6px 0">• ${esc(n)}</p>`).join('')}</div>`;
 }
-const KIND = { interne: ['Interne', 'b'], regulier: ['Revenu', 'g'], partage_out: ['Partage de frais', ''], autre_rentree: ['Rentrée', 'g'], ponctuel: ['Ponctuel', 'w'], courante: ['', ''], remboursement: ['Remboursement', 'g'], cagnotte: ['Cagnotte charges', 'b'] };
+/* ---- simulateur de remboursement anticipé ---- */
+let SIM = null;
+function iziLoan() { return (D.prets_detail || []).find((p) => p.categorie === 'personnel' && p.complet && p.capital_restant > 0 && p.mensualite > 0); }
+function amortir(B, r, pay) { let n = 0, I = 0; while (B > 0.005 && n < 1200) { const i = B * r; I += i; B = B + i - pay; n++; if (B < 0) B = 0; } return { n, I }; }
+function calibRate(B, pay, n) { if (pay * n <= B) return 0; let lo = 0, hi = 0.05; for (let k = 0; k < 80; k++) { const mid = (lo + hi) / 2; const pm = mid * B / (1 - Math.pow(1 + mid, -n)); if (pm > pay) hi = mid; else lo = mid; } return (lo + hi) / 2; }
+const addMo = (iso, k) => { const d = pd(iso); return new Date(d.getFullYear(), d.getMonth() + k, d.getDate()); };
+const fmo = (d) => MOISL[d.getMonth()] + ' ' + d.getFullYear();
+const dureeTxt = (n) => { const a = Math.floor(n / 12), m = n % 12; return (a ? a + ' an' + (a > 1 ? 's' : '') : '') + (a && m ? ' ' : '') + (m ? m + ' mois' : '') || '0 mois'; };
+function simHtml() {
+  const p = iziLoan(); if (!p) return '';
+  const B = p.capital_restant, pay = p.mensualite, n = p.mois_restants, r = calibRate(B, pay, n);
+  SIM = { p, B, pay, n, r, base: amortir(B, r, pay) };
+  const maxL = Math.floor(B / 50) * 50;
+  return `<div class="card" id="sim"><h3>Simulateur de remboursement anticipé</h3><p class="sub">${esc(p.nom)} · reste ${eur(B)} · ${eur(pay)}/mois · fin ${fdate(p.date_fin)}</p>
+    <div class="sl"><span>Versement ponctuel maintenant</span><b class="num" id="simLv">0 €</b></div>
+    <input type="range" id="simL" min="0" max="${maxL}" step="50" value="0" aria-label="Versement ponctuel">
+    <div class="chips" style="margin:6px 0 12px">${[0, 500, 1000, 2000, maxL].filter((v, i, a) => v <= maxL && a.indexOf(v) === i).map((v) => `<button data-l="${v}">${v === maxL ? 'Tout' : v ? nf0.format(v) + ' €' : 'Aucun'}</button>`).join('')}</div>
+    <div class="sl"><span>En plus chaque mois</span><b class="num" id="simXv">0 €</b></div>
+    <input type="range" id="simX" min="0" max="400" step="10" value="0" aria-label="Supplément mensuel">
+    <div class="simo" id="simOut"></div>
+    <p class="sub" style="margin:10px 0 0">Estimations. Taux mensuel recalculé pour que ${eur(pay)} × ${n} mois remboursent ${eur(B)} (≈ ${(r * 1200).toFixed(2).replace('.', ',')} % par an ; TAEG du contrat ${String(p.taeg).replace('.', ',')} %, l’écart vient sans doute de l’assurance ou des arrondis). La mensualité reste la même et la durée raccourcit. Pour un crédit à la consommation, pas d’indemnité si tu rembourses au plus 10 000 € sur 12 mois ; au-delà, elle est plafonnée à 1 % (0,5 % s’il reste moins d’un an). Demande un décompte à ta banque avant de verser.</p></div>`;
+}
+function simUpdate() {
+  if (!SIM || !$('#simL')) return;
+  const L = +$('#simL').value, X = +$('#simX').value, S = SIM;
+  const nw = L >= S.B - 0.005 ? { n: 0, I: 0 } : amortir(S.B - L, S.r, S.pay + X);
+  const saved = S.base.I - nw.I, gained = S.base.n - nw.n;
+  const end = nw.n ? addMo(S.p.prochaine_echeance.date, nw.n - 1) : null;
+  $('#simLv').textContent = eur(L, 1); $('#simXv').textContent = eur(X, 1) + '/mois';
+  $('#simOut').innerHTML = `<div><div class="l">Intérêts économisés</div><div class="v num ${saved > 0.5 ? 'pos' : ''}">≈ ${eur(saved, 1)}</div></div>
+    <div><div class="l">Nouvelle fin</div><div class="v">${end ? fmo(end) : 'soldé'}</div><div class="l">au lieu de ${fmo(pd(S.p.date_fin))}</div></div>
+    <div><div class="l">Mois gagnés</div><div class="v num ${gained > 0 ? 'pos' : ''}">${gained}</div><div class="l">${dureeTxt(gained)}</div></div>
+    <div><div class="l">Intérêts restants</div><div class="v num">≈ ${eur(nw.I, 1)}</div><div class="l">au lieu de ≈ ${eur(S.base.I, 1)}</div></div>`;
+}
+function bindSim() {
+  const l = $('#simL'), x = $('#simX'); if (!l) return;
+  l.addEventListener('input', simUpdate); x.addEventListener('input', simUpdate);
+  document.querySelectorAll('#sim [data-l]').forEach((b) => b.addEventListener('click', () => { l.value = b.dataset.l; simUpdate(); }));
+  simUpdate();
+}
+
+/* ---- saisies manuelles : chiffrées sur l’appareil avec une clé dérivée du code ---- */
+const MAN_KEY = 'mf-manuel', MAN_SALT = 'mes-finances/manuel/v1';
+let MKEY = null, MANUEL = [], RAW = null, MAN_ERR = false;
+const r2 = (n) => Math.round(n * 100) / 100;
+const b64e = (buf) => { let t = ''; new Uint8Array(buf).forEach((c) => (t += String.fromCharCode(c))); return btoa(t); };
+const clone = (o) => (typeof structuredClone === 'function' ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
+const isoToday = () => { const t = new Date(); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); };
+async function deriveMKey(code) {
+  const enc = new TextEncoder();
+  const base = await crypto.subtle.importKey('raw', enc.encode(code), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(MAN_SALT), iterations: 310000 }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function loadManuel() {
+  MAN_ERR = false; const t = localStorage.getItem(MAN_KEY); if (!t) return [];
+  try { const o = JSON.parse(t); const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(o.iv) }, MKEY, b64(o.ct)); const a = JSON.parse(new TextDecoder().decode(pt)); return Array.isArray(a) ? a : []; }
+  catch (e) { MAN_ERR = true; return []; }
+}
+async function saveManuel() {
+  if (MAN_ERR) { try { localStorage.setItem(MAN_KEY + '-ancien', localStorage.getItem(MAN_KEY) || ''); } catch (e) {} MAN_ERR = false; }
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, MKEY, new TextEncoder().encode(JSON.stringify(MANUEL)));
+  localStorage.setItem(MAN_KEY, JSON.stringify({ v: 1, iv: b64e(iv), ct: b64e(ct) }));
+}
+const manActifs = () => (D && D.manuel ? D.manuel.filter((e) => !e.doublon) : []);
+function applyManual(X) {
+  X.manuel = MANUEL.map((e) => {
+    const dup = X.operations.find((o) => o.montant < 0 && Math.abs(-o.montant - e.montant) < 0.005 && Math.abs(pd(o.date) - pd(e.date)) <= 3 * 864e5)
+      || (X.en_cours || []).find((o) => Math.abs(-o.montant - e.montant) < 0.005 && (!o.date || Math.abs(pd(o.date) - pd(e.date)) <= 3 * 864e5));
+    return { ...e, doublon: dup ? dup.libelle + (dup.date ? ' du ' + fdate(dup.date) : '') : null };
+  });
+  const act = X.manuel.filter((e) => !e.doublon);
+  X.manuel_total = r2(act.reduce((a, e) => a + e.montant, 0));
+  if (!act.length) return X;
+  act.forEach((e) => X.operations.push({ date: e.date, libelle: e.libelle, montant: -e.montant, solde: null, kind: 'manuel', cat: e.categorie, estime: true, note: null, manuel: e.id }));
+  X.operations.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  X.solde_dispo = r2(X.solde_dispo - X.manuel_total);
+  const E = X.estimation;
+  if (E) { const t = act.filter((e) => e.date <= E.fin).reduce((a, e) => a + e.montant, 0); ['solde_apres_prelevements', 'solde_si_incertains', 'solde_avec_depenses_moyennes'].forEach((k) => { if (E[k] != null) E[k] = r2(E[k] - t); }); E.decouvert = E.solde_apres_prelevements < 0; }
+  const P = X.projection;
+  if (P && P.points && P.points.length) {
+    const pts = P.points, d0 = pts[0][0];
+    act.slice().sort((a, b) => (a.date < b.date ? -1 : 1)).forEach((e) => {
+      if (e.date <= d0) { pts.forEach((p) => (p[1] = r2(p[1] - e.montant))); return; }
+      if (P.horizon && e.date > P.horizon) return;
+      let i = pts.findIndex((p) => p[0] > e.date); if (i < 0) i = pts.length;
+      const prev = pts[i - 1][1];
+      for (let k = i; k < pts.length; k++) pts[k][1] = r2(pts[k][1] - e.montant);
+      pts.splice(i, 0, [e.date, r2(prev - e.montant), e.libelle + ' (saisie manuelle)']);
+    });
+    const mn = pts.reduce((a, p) => (p[1] < a[1] ? p : a), pts[0]); P.min = { solde: mn[1], date: mn[0] };
+    (P.gros || []).forEach((g) => { const t = act.filter((e) => e.date <= g.date || e.date <= d0).reduce((a, e) => a + e.montant, 0); g.avant = r2(g.avant - t); g.apres = r2(g.apres - t); g.solde_bas = g.apres < P.seuil; });
+    X.alertes_solde_bas = (P.gros || []).filter((g) => g.solde_bas);
+  }
+  const B = X.budgets, mo = X.donnees_au.slice(0, 7);
+  if (B) {
+    act.filter((e) => e.date.slice(0, 7) === mo).forEach((e) => {
+      const l = B.lignes.find((x) => x.categorie === e.categorie);
+      if (l) { l.depense = r2(l.depense + e.montant); l.pct = l.budget ? r2(100 * l.depense / l.budget) : 0; l.statut = l.pct > 100 ? 'rouge' : l.pct >= B.seuil_orange * 100 ? 'orange' : 'vert'; l.reste = r2(l.budget - l.depense); }
+      else { const h = B.hors_budget.find((x) => x.categorie === e.categorie); if (h) h.depense = r2(h.depense + e.montant); else B.hors_budget.push({ categorie: e.categorie, depense: r2(e.montant) }); }
+      B.total_depense = r2(B.total_depense + e.montant);
+    });
+    B.lignes.sort((a, b) => b.pct - a.pct);
+    X.alertes_budget = B.lignes.filter((l) => l.statut !== 'vert').map((l) => ({ categorie: l.categorie, depense: l.depense, budget: l.budget, pct: l.pct, niveau: l.statut }));
+  }
+  const T = X.douze_mois;
+  if (T) ['solde_budgets', 'solde_habitudes'].forEach((k) => T[k].forEach((p) => { const t = act.filter((e) => e.date <= p[0] || e.date <= X.donnees_au).reduce((a, e) => a + e.montant, 0); p[1] = r2(p[1] - t); }));
+  return X;
+}
+function rebuild() { D = applyManual(clone(RAW)); render(); }
+function manCats() {
+  const c = [];
+  (D.budgets ? D.budgets.lignes.map((l) => l.categorie) : []).concat((D.categories || []).map((x) => x.name)).concat(['Autres']).forEach((x) => { if (x && !c.includes(x) && !/^Prêts|^Épargne|^Virements/.test(x)) c.push(x); });
+  return c.sort((a, b) => a.localeCompare(b, 'fr'));
+}
+function manHtml() {
+  const L = D.manuel || [];
+  return `<details class="card manf" ${ST.manOpen ? 'open' : ''}><summary><span><h3 style="margin:0">Ajouter une dépense</h3><span class="sub" style="margin:0">${L.length ? L.length + ' saisie' + (L.length > 1 ? 's' : '') + ' manuelle' + (L.length > 1 ? 's' : '') : 'Pas encore sur le relevé ? Note-la ici.'}</span></span><span class="chev">›</span></summary>
+    ${MAN_ERR ? `<div class="alert orange" style="margin-top:12px"><div class="ai">${ICON.info}</div><div><div class="ax">Des saisies enregistrées avec un autre code n’ont pas pu être lues. Elles sont conservées sur l’appareil mais ne sont pas affichées.</div></div></div>` : ''}
+    <form id="manForm" autocomplete="off">
+      <div class="frow"><label>Montant (€)<input id="mAmt" inputmode="decimal" placeholder="12,50" required></label><label>Date<input id="mDate" type="date" value="${isoToday()}" required></label></div>
+      <label>Libellé<input id="mLib" maxlength="60" placeholder="Boulangerie, plein d’essence…" required></label>
+      <label>Catégorie<select id="mCat">${manCats().map((c) => `<option ${c === 'Autres' ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+      <div id="mErr" class="neg" style="min-height:0;font-size:13px"></div>
+      <button class="btn" type="submit">Ajouter</button>
+    </form>
+    ${L.length ? `<div class="daysep">Saisies manuelles</div>${L.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).map((e) => `<div class="row">${av(e.libelle, '#facc15')}<div class="main"><div class="t">${esc(e.libelle)}</div><div class="s">${flong(e.date)} · ${esc(e.categorie)} <span class="badge w">manuel</span>${e.doublon ? `<br><span class="warn">Probablement déjà importée (${esc(e.doublon)}) : ignorée, tu peux la supprimer.</span>` : ''}</div></div><div class="amt num">${eurS(-e.montant)}<button class="del" data-del="${esc(e.id)}" aria-label="Supprimer">Supprimer</button></div></div>`).join('')}` : ''}
+    <p class="sub" style="margin:10px 0 0">Enregistrées uniquement sur cet appareil, chiffrées avec ton code. Comptées dans le solde disponible, les budgets du mois et les projections. Si la même somme apparaît sur un relevé à ±3 jours, la saisie est ignorée automatiquement.</p></details>`;
+}
+function bindMan(root) {
+  const det = root.querySelector('.manf'); if (!det) return;
+  det.addEventListener('toggle', () => (ST.manOpen = det.open));
+  root.querySelector('#manForm').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const amt = parseFloat(String($('#mAmt').value).replace(/\s/g, '').replace(',', '.')), lib = $('#mLib').value.trim(), date = $('#mDate').value, cat = $('#mCat').value;
+    if (!(amt > 0 && amt < 100000)) { $('#mErr').textContent = 'Montant invalide.'; return; }
+    if (!lib) { $('#mErr').textContent = 'Ajoute un libellé.'; return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { $('#mErr').textContent = 'Date invalide.'; return; }
+    MANUEL.push({ id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), date, libelle: lib.slice(0, 60), montant: r2(amt), categorie: cat, cree_le: new Date().toISOString() });
+    await saveManuel(); ST.manOpen = true; rebuild();
+  });
+  root.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+    if (!confirm('Supprimer cette saisie ?')) return;
+    MANUEL = MANUEL.filter((e) => e.id !== b.dataset.del); await saveManuel(); rebuild();
+  }));
+}
+const KIND = { manuel: ['manuel', 'w'], interne: ['Interne', 'b'], regulier: ['Revenu', 'g'], partage_out: ['Partage de frais', ''], autre_rentree: ['Rentrée', 'g'], ponctuel: ['Ponctuel', 'w'], courante: ['', ''], remboursement: ['Remboursement', 'g'], cagnotte: ['Cagnotte charges', 'b'] };
 function renderOps(filter, q) {
   const root = $('#v-ops'); const ql = q.trim().toLowerCase();
   const list = D.operations.filter((o) => {
@@ -809,19 +1017,22 @@ function renderOps(filter, q) {
   list.slice(0, 400).forEach((o) => {
     if (o.date !== last) { html += `<div class="daysep">${flong(o.date)} ${pd(o.date).getFullYear()}</div>`; last = o.date; }
     const k = KIND[o.kind] || ['', ''];
-    html += `<div class="row ${o.kind === 'interne' ? 'op-int' : ''}">${av(o.libelle, o.kind === 'interne' ? '#475069' : o.montant > 0 ? '#34d399' : null)}<div class="main"><div class="t">${esc(o.libelle)}</div><div class="s">${esc(o.cat)}${k[0] ? ` <span class="badge ${k[1]}">${k[0]}</span>` : ''}</div></div><div class="amt num ${o.montant > 0 ? 'pos' : ''}">${eurS(o.montant)}<small>solde ${o.estime ? '≈ ' : ''}${eur(o.solde)}</small></div></div>`;
+    html += `<div class="row ${o.kind === 'interne' ? 'op-int' : ''}">${av(o.libelle, o.kind === 'interne' ? '#475069' : o.montant > 0 ? '#34d399' : null)}<div class="main"><div class="t">${esc(o.libelle)}</div><div class="s">${esc(o.cat)}${k[0] ? ` <span class="badge ${k[1]}">${k[0]}</span>` : ''}</div></div><div class="amt num ${o.montant > 0 ? 'pos' : ''}">${eurS(o.montant)}<small>${o.manuel ? 'pas encore relevée' : `solde ${o.estime ? '≈ ' : ''}${eur(o.solde)}`}</small></div></div>`;
   });
   const pend = (D.en_cours || []).map((o) => `<div class="row">${av(o.libelle, '#fb923c')}<div class="main"><div class="t">${esc(o.libelle)}</div><div class="s">Carte en cours${o.date ? ' · ' + flong(o.date) : ''}${o.solde_incluant != null ? ' · solde l’incluant ' + eur(o.solde_incluant) : ''}</div></div><div class="amt num">${eurS(o.montant)}</div></div>`)
     .concat((D.a_venir || []).map((o) => `<div class="row">${av('AV', '#c084fc')}<div class="main"><div class="t">Opération à venir</div><div class="s">${esc(o.note || o.libelle)}</div></div><div class="amt num">${eurS(o.montant)}</div></div>`)).join('');
+  ST.opsf = filter;
   root.innerHTML = `<h2>Opérations</h2>
+    ${manHtml()}
     <input class="search" type="search" placeholder="Rechercher un libellé ou une catégorie" value="${esc(q)}">
     <div class="chips">${[['all', 'Tout'], ['dep', 'Dépenses'], ['rev', 'Rentrées'], ['pret', 'Prêts'], ['pon', 'Ponctuels'], ['int', 'Internes']].map(([v, l]) => `<button data-f="${v}" class="${v === filter ? 'on' : ''}">${l}</button>`).join('')}</div>
     ${pend && filter === 'all' && !ql ? `<div class="card" style="padding-top:8px"><div class="daysep">En attente</div>${pend}</div>` : ''}
     <div class="card" style="padding-top:8px">${html || '<p class="sub">Aucune opération.</p>'}</div>
-    <div class="foot">${list.length} opération${list.length > 1 ? 's' : ''} · compte courant · ${D.nb_internes} virements internes exclus des calculs (en grisé)</div>`;
+    <div class="foot">${list.length} opération${list.length > 1 ? 's' : ''}${manActifs().length ? ' dont ' + manActifs().length + ' saisie' + (manActifs().length > 1 ? 's' : '') + ' manuelle' + (manActifs().length > 1 ? 's' : '') : ''} · compte courant · ${D.nb_internes} virements internes exclus des calculs (en grisé)</div>`;
   const s = root.querySelector('.search');
   s.addEventListener('input', () => { const pos = s.selectionStart; renderOps(filter, s.value); const n = $('#v-ops .search'); n.focus(); n.setSelectionRange(pos, pos); });
   root.querySelectorAll('.chips button').forEach((b) => b.addEventListener('click', () => { renderOps(b.dataset.f, s.value); }));
+  bindMan(root);
 }
 
 /* ---------------- boot ---------------- */
