@@ -389,8 +389,8 @@ function ring(pct, color, size = 76, label) {
 const stColor = (st) => (st === 'rouge' ? 'var(--neg)' : st === 'orange' ? 'var(--warn)' : 'var(--pos)');
 function calRow(c) {
   const amt = c.montant == null ? `<span class="warn">variable</span><small>dernier ${eur(c.dernier)}</small>` : `<span class="num ${c.montant > 0 ? 'pos' : ''}">${eurS(c.montant)}</span>`;
-  const b = [c.pret ? '<span class="badge b">prêt</span>' : '', c.type === 'interne' ? '<span class="badge b">interne</span>' : '', c.incertain && c.type === 'prelevement' ? '<span class="badge w">incertain</span>' : '', c.approx ? '<span class="badge w">date approx.</span>' : '', c.type === 'rentree' ? '<span class="badge g">paie</span>' : ''].join('');
-  return `<div class="row">${av(c.nom, c.type === 'rentree' ? '#2ee6a6' : c.type === 'interne' ? '#9b6bff' : c.pret ? '#6b8cff' : null)}<div class="main"><div class="t">${esc(c.nom)}</div><div class="s">${c.approx ? 'vers le ' : ''}${flong(c.date)} ${b}</div></div><div class="amt">${amt}</div></div>`;
+  const b = [c.pret ? '<span class="badge b">prêt</span>' : '', c.type === 'interne' ? '<span class="badge b">interne</span>' : '', c.incertain && c.type === 'prelevement' ? '<span class="badge w">incertain</span>' : '', c.approx ? '<span class="badge w">date approx.</span>' : '', c.type === 'rentree' ? '<span class="badge g">paie</span>' : '', c.type === 'obligatoire' ? '<span class="badge r">obligatoire</span>' : '', c.cagnotte ? '<span class="badge b">payé par la cagnotte</span>' : ''].join('');
+  return `<div class="row">${av(c.nom, c.type === 'rentree' ? '#2ee6a6' : c.type === 'interne' ? '#9b6bff' : c.type === 'obligatoire' ? '#ff9152' : c.pret ? '#6b8cff' : null)}<div class="main"><div class="t">${esc(c.nom)}</div><div class="s">${c.approx ? 'vers le ' : ''}${flong(c.date)} ${b}</div></div><div class="amt">${amt}</div></div>`;
 }
 function alertsHtml(opts = {}) {
   const E = D.estimation, out = [];
@@ -427,7 +427,7 @@ function renderAccueil() {
     <div><div class="sub" style="margin:0">Au ${fshort(P.horizon)}</div><div class="num g-acc" style="font-size:26px;font-weight:750">${eur(P.points[P.points.length - 1][1])}</div><div class="sub" style="margin:0">après paie et échéances</div></div></div>
     ${projPts.length > 1 ? lineChart({ series: [{ pts: projPts, color: '#2ee6a6' }], step: true, area: true, h: 120 }) : ''}
     ${P.gros.length ? `<div class="daysep">Gros prélèvements (≥ 50 €)</div>` + P.gros.map((g) => `<div class="row">${av(g.nom, g.solde_bas ? '#ff5d78' : null)}<div class="main"><div class="t">${esc(g.nom)}</div><div class="s">${flong(g.date)} · avant <span class="num">${eur(g.avant)}</span> → après <span class="num ${g.solde_bas ? 'neg' : ''}">${eur(g.apres)}</span>${g.solde_bas ? ' <span class="badge r">solde bas</span>' : ''}${g.incertain ? ' <span class="badge w">incertain</span>' : ''}</div></div><div class="amt num">${eurS(g.montant)}</div></div>`).join('') : '<p class="sub" style="margin:8px 0 0">Aucun prélèvement de 50 € ou plus dans les 14 jours.</p>'}
-    ${P.syndic ? `<p class="sub" style="margin:10px 0 0">⚠︎ Appel de charges de copropriété attendu vers le ${fshort(P.syndic.date)} (≈ ${eur(Math.abs(P.syndic.dernier), 1)} la dernière fois, montant variable), non inclus dans la courbe.</p>` : ''}
+    ${P.appel_cagnotte ? `<p class="sub" style="margin:10px 0 0">Appel de copropriété vers le ${fshort(P.appel_cagnotte.date)} : payé par la cagnotte charges (Livret A), pas par ce compte.</p>` : ''}
   </div>
   ${pend.length ? `<div class="card"><h3>En attente</h3><p class="sub">Pas encore dans le solde de ${eur(D.solde)}.</p>${pend.map((o) => `<div class="row">${av(o.libelle, o.avenir ? '#9b6bff' : '#ff9152')}<div class="main"><div class="t">${esc(o.avenir ? (o.libelle || 'Opération à venir') : o.libelle)}</div><div class="s">${o.avenir ? (o.date ? flong(o.date) + ' · ' : '') + esc(o.note || '') : 'Carte en cours' + (o.date ? ' · ' + flong(o.date) : '')}</div></div><div class="amt num neg">${eurS(o.montant)}</div></div>`).join('')}</div>` : ''}
   <div class="card" ${goto('budget', "ST.budget.mode='budgets';renderBudget()")} style="cursor:pointer">
@@ -436,9 +436,14 @@ function renderAccueil() {
     <span class="more">Voir tous les budgets ›</span>
   </div>
   <div class="card" ${goto('budget', "ST.budget.mode='conseils';renderBudget()")} style="cursor:pointer">
-    <h3>Le mois prochain</h3><p class="sub">${esc(C.mois)} · à mettre de côté</p>
-    <div class="bignum">${cu(C.montant_conseille, 'eur0', C.montant_conseille > 0 ? 'g-pos' : 'g-acc')}</div>
-    <p class="sub" style="margin:0">${esc(C.message)}</p><span class="more">Voir les conseils ›</span>
+    <h3>Capacité d’épargne · ${esc(C.mois)}</h3><p class="sub">Salaire moins les dépenses obligatoires, si tu ne fais aucune autre dépense carte</p>
+    <div class="bignum">${cu(C.capacite, 'eur0', glow(C.capacite))}</div>
+    <div class="kv"><span>Salaire</span><b class="num pos">${eurS(C.salaire)}</b></div>
+    <div class="kv"><span>Prélèvements obligatoires</span><b class="num neg">${eurS(-C.total_prelevements)}</b></div>
+    <div class="kv"><span>Charges appart (Livret A)</span><b class="num neg">${eurS(-C.charges_appart)}</b></div>
+    <div class="kv"><span>Courses avec ${esc(LB().partage)} (Revolut)</span><b class="num neg">${eurS(-C.courses)}</b></div>
+    <div class="kv"><span class="mut">Avec tes dépenses carte habituelles (≈ ${eur(C.depenses_carte_moyennes, 1)}/mois)</span><b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes)}</b></div>
+    <span class="more">Voir le détail ›</span>
   </div>
   <div class="card">
     <h3>Estimation fin ${esc(E.mois)}</h3>
@@ -455,10 +460,10 @@ function renderAccueil() {
     ${D.decouvert_autorise ? `<p class="sub" style="margin:8px 0 0">Découvert autorisé : ${eur(D.decouvert_autorise.montant, 1)} (taux débiteur ${nf2.format(D.decouvert_autorise.taux_debiteur)} %).</p>` : ''}
   </div>
   <div class="grid2">
-    <div class="metric"><div class="ic" style="background:rgba(46,230,166,.14);color:var(--pos)">◆</div><div class="l">Épargne</div><div class="v">${cu(ep.livret_a + ep.lep, 'eur0', 'g-pos')}</div><div class="d">Livret A + LEP</div></div>
+    <div class="metric"><div class="ic" style="background:rgba(46,230,166,.14);color:var(--pos)">◆</div><div class="l">Épargne (LEP)</div><div class="v">${cu(ep.lep, 'eur0', 'g-pos')}</div><div class="d">cagnotte charges ${eur(D.cagnotte.solde, 1)}</div></div>
     <div class="metric" ${goto('epargne', "ST.pat.mode='patrimoine';renderPat()")}><div class="ic" style="background:rgba(107,140,255,.16);color:var(--acc)">≡</div><div class="l">Patrimoine net</div><div class="v">${cu(D.patrimoine_detail.net, 'eur0', glow(D.patrimoine_detail.net))}</div><div class="d">brut ${eur(D.patrimoine_detail.brut, 1)}</div></div>
     <div class="metric"><div class="ic" style="background:rgba(155,107,255,.16);color:var(--acc2)">⌂</div><div class="l">Prêts / mois</div><div class="v">${cu(D.total_prets, 'eur0')}</div><div class="d">${nf0.format(D.part_prets)} % du revenu régulier</div></div>
-    <div class="metric"><div class="ic" style="background:${eq < 0 ? 'rgba(255,93,120,.15)' : 'rgba(46,230,166,.14)'};color:${eq < 0 ? 'var(--neg)' : 'var(--pos)'}">±</div><div class="l">Équilibre mensuel</div><div class="v">${cu(eq, 'eurS0', glow(eq))}</div><div class="d">estimation, syndic lissé</div></div>
+    <div class="metric"><div class="ic" style="background:${eq < 0 ? 'rgba(255,93,120,.15)' : 'rgba(46,230,166,.14)'};color:${eq < 0 ? 'var(--neg)' : 'var(--pos)'}">±</div><div class="l">Équilibre mensuel</div><div class="v">${cu(eq, 'eurS0', glow(eq))}</div><div class="d">moyenne, charges et courses incluses</div></div>
   </div>
   <div class="card"><h3>Évolution du solde</h3><p class="sub">Après chaque opération, du ${fdate(D.serie_solde[0][0])} au ${fdate(D.donnees_au)}.</p>${lineChart({ series: [{ pts: D.serie_solde, color: '#6b8cff' }], step: true, area: true })}</div>
   <div class="foot">${D.regles.map(esc).join('<br>')}<br>Mis à jour le ${esc(D.genere_le.replace('T', ' à '))}</div>`;
@@ -494,23 +499,29 @@ function budgetsHtml() {
   </div>`;
 }
 function conseilsHtml() {
-  const C = D.conseils;
+  const C = D.conseils, G = D.cagnotte, cg = G && G.prochain_appel;
   return `<div class="card hero" style="border-color:rgba(46,230,166,.25);background:radial-gradient(120% 140% at 100% 0%,rgba(46,230,166,.18),transparent 55%),linear-gradient(160deg,#101a22,#0b0f1d)">
-    <div class="lbl"><span>À mettre de côté en ${esc(C.mois)}</span></div>
-    <div class="big ${C.montant_conseille > 0 ? 'g-pos' : 'g-acc'}">${cu(C.montant_conseille, 'eur0')}</div>
-    <div class="meta" style="margin-top:6px">${esc(C.message)}</div></div>
-  <div class="card"><h3>Le calcul</h3><p class="sub">Coussin de ${eur(C.coussin, 1)} gardé sur le compte avant la paie suivante.</p>
-    <div class="kv"><span>Solde le plus bas avant la paie du ${fshort(C.date_paie)}</span><b class="num">${eur(C.solde_avant_paie)}</b></div>
-    <div class="kv"><span>Salaire attendu</span><b class="num pos">${eurS(C.salaire)}</b></div>
-    <div class="kv"><span>Prélèvements fixes du mois</span><b class="num neg">${eurS(-C.fixes)}</b></div>
-    ${C.fixes_incertains ? `<div class="kv"><span>Prélèvements incertains</span><b class="num neg">${eurS(-C.fixes_incertains)}</b></div>` : ''}
-    <div class="kv"><span>Dépenses variables (tes budgets)</span><b class="num neg">${eurS(-C.variable_budgets)}</b></div>
-    <div class="kv"><span class="mut">… au rythme actuel ce serait</span><b class="num mut">${eurS(-C.variable_actuel)}</b></div>
-    ${C.syndic ? `<div class="kv"><span>Appel syndic attendu vers le ${fshort(C.syndic.date)} (estimé)</span><b class="num neg">${eurS(-C.syndic.montant_estime)}</b></div>` : ''}
-    <div class="kv total"><span><b>Marge en tenant tes budgets</b></span><b class="num ${glow(C.syndic ? C.capacite_budgets_syndic : C.capacite_budgets)}">${eurS(C.syndic ? C.capacite_budgets_syndic : C.capacite_budgets)}</b></div>
-    ${C.syndic ? `<div class="kv"><span class="mut">Sans l’appel de syndic</span><b class="num ${cls(C.capacite_budgets)}">${eurS(C.capacite_budgets)}</b></div>` : ''}
+    <div class="lbl"><span>Capacité d’épargne · ${esc(C.mois)}</span></div>
+    <div class="big ${glow(C.capacite)}">${cu(C.capacite, 'eur0')}</div>
+    <div class="meta" style="margin-top:6px">Si tu ne fais aucune autre dépense carte. Sans Fitness Park (résiliation en cours) : <b class="num">${eur(C.capacite_sans_fitness, 1)}</b>.</div>
+    <div class="chips2"><span class="chip">Avec tes dépenses carte habituelles <b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes, 1)}</b></span></div></div>
+  <div class="card"><h3>Le calcul</h3><p class="sub">${esc(C.regle)}</p>
+    <div class="kv"><span>Salaire attendu le ${fshort(C.date_paie)}</span><b class="num pos">${eurS(C.salaire)}</b></div>
+    ${C.groupes.map((g) => `<div class="kv"><span>${esc(g.groupe)}${g.groupe === 'Sport' && C.fitness ? ' <span class="badge w">en cours de résiliation</span>' : ''}</span><b class="num neg">${eurS(-g.montant)}</b></div>`).join('')}
+    <div class="kv"><span>Charges appart → cagnotte Livret A (ta part)</span><b class="num neg">${eurS(-C.charges_appart)}</b></div>
+    <div class="kv"><span>Courses avec ${esc(LB().partage)} → Revolut</span><b class="num neg">${eurS(-C.courses)}</b></div>
+    <div class="kv total"><span><b>Capacité d’épargne</b></span><b class="num ${glow(C.capacite)}" style="font-size:17px">${eurS(C.capacite)}</b></div>
+    <div class="kv"><span class="mut">Sans Fitness Park (${eur(C.fitness)})</span><b class="num ${cls(C.capacite_sans_fitness)}">${eurS(C.capacite_sans_fitness)}</b></div>
+    <div class="kv"><span class="mut">Avec tes dépenses carte habituelles (moyenne ${eur(C.depenses_carte_moyennes)}/mois)</span><b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes)}</b></div>
+    <div class="kv"><span class="mut">Avec tes budgets carte (${eur(C.variable_budgets, 1)}/mois)</span><b class="num ${cls(C.reste_avec_budgets)}">${eurS(C.reste_avec_budgets)}</b></div>
+    <p class="sub" style="margin:10px 0 0">${esc(C.message)} Solde le plus bas avant la paie : ${eur(C.solde_avant_paie)}.</p>
   </div>
-  ${C.repartition.length ? `<div class="card"><h3>Répartition conseillée</h3>${C.repartition.map((r) => `<div class="row">${av(r.cible, '#2ee6a6')}<div class="main"><div class="t">${esc(r.cible)}</div><div class="s">${esc(r.pourquoi)}</div></div><div class="amt num pos">${eur(r.montant, 1)}</div></div>`).join('')}</div>` : ''}
+  <div class="card"><h3>Prélèvements obligatoires de ${esc(C.mois.split(' ')[0])}</h3><p class="sub">Total ${eur(C.total_prelevements)} · d’après les mois précédents</p>
+    ${C.prelevements.map((p) => `<div class="kv"><span>${fshort(p.date)} · ${esc(p.nom)}${p.statut ? ' <span class="badge w">' + esc(p.statut) + '</span>' : p.incertain ? ' <span class="badge w">incertain</span>' : ''}</span><b class="num">${eur(p.montant)}</b></div>`).join('')}</div>
+  ${C.repartition.length ? `<div class="card"><h3>Répartition conseillée</h3><p class="sub">Sur ${eur(C.montant_conseille, 1)}, à ajuster selon tes dépenses carte du mois.</p>${C.repartition.map((r) => `<div class="row">${av(r.cible, '#2ee6a6')}<div class="main"><div class="t">${esc(r.cible)}</div><div class="s">${esc(r.pourquoi)}</div></div><div class="amt num pos">${eur(r.montant, 1)}</div></div>`).join('')}</div>` : ''}
+  ${G ? `<div class="card"><h3>${esc(G.nom)}</h3><p class="sub">${esc(G.compte)} · ${eur(G.apport_mensuel.toi, 1)} toi + ${eur(G.apport_mensuel.partenaire, 1)} ${esc(LB().partage)} par mois · paie ${esc(G.paie)}</p>
+    <div class="kv"><span>Solde au ${fdate(G.date)}</span><b class="num">${eur(G.solde)}</b></div>
+    ${cg ? `<div class="kv"><span>Appel copro attendu vers le ${fshort(cg.date)}</span><b class="num neg">≈ ${eurS(-cg.estime, 1)}</b></div><div class="kv"><span>Solde prévu avant l’appel</span><b class="num">${eur(cg.solde_prevu_avant, 1)}</b></div>${cg.manque ? `<div class="kv"><span>Il manquerait</span><b class="num neg">≈ ${eur(cg.manque, 1)}</b></div>` : ''}` : ''}</div>` : ''}
   <div class="card"><h3>Pistes personnalisées</h3><p class="sub">D’après tes opérations passées. Montants mensuels estimés.</p>
   ${C.suggestions.map((s, i) => `<div class="row" style="align-items:flex-start">${av(String(i + 1), AVC[i % AVC.length])}<div class="main"><div class="t" style="white-space:normal">${esc(s.titre)}</div><div class="s">${esc(s.texte)}</div></div><div class="amt num pos">${s.montant ? '≈ ' + eur(s.montant, 1) : ''}</div></div>`).join('')}</div>`;
 }
@@ -541,8 +552,8 @@ function analyseHtml() {
   let charts;
   if (vue === 'moy') {
     charts = `<div class="card"><h3>Moyenne par mois</h3><p class="sub">Sur ${M.n_periodes} relevés complets, virements internes exclus.</p>
-      <div class="bignum">${cu(M.equilibre, 'eurS', glow(M.equilibre))}</div><p class="sub">reste par mois après dépenses courantes et syndic lissé</p>
-      ${hbars([{ l: 'Revenu régulier', v: M.regulier, m: 'salaire ' + eur(M.salaire, 1) + ' + ' + LB().partage + ' net ' + eur(M.partage_net, 1) }, { l: 'Dépenses courantes', v: M.courante, m: 'hors ponctuels et hors internes' }, { l: 'Syndic lissé', v: M.syndic_lisse, m: 'trimestriel, montant variable' }, { l: 'Autres rentrées (ponctuelles)', v: M.autres, m: LB().autres_desc }, { l: 'Dépenses ponctuelles', v: M.ponctuel, m: LB().ponctuels_desc }], (v) => eur(v, 1), { dot: true })}</div>`;
+      <div class="bignum">${cu(M.equilibre, 'eurS', glow(M.equilibre))}</div><p class="sub">reste par mois après dépenses courantes (charges appart et courses incluses)</p>
+      ${hbars([{ l: 'Revenu régulier', v: M.regulier, m: 'salaire ' + eur(M.salaire, 1) + ' + ' + LB().partage + ' net ' + eur(M.partage_net, 1) }, { l: 'Dépenses courantes', v: M.courante, m: 'hors ponctuels et hors internes' }, { l: 'Autres rentrées (ponctuelles)', v: M.autres, m: LB().autres_desc }, { l: 'Dépenses ponctuelles', v: M.ponctuel, m: LB().ponctuels_desc }], (v) => eur(v, 1), { dot: true })}</div>`;
   } else {
     charts = `<div class="card"><h3>Revenus</h3><p class="sub">Régulier = salaire + partage de frais (net).</p>${barChart(P.map(lab), [{ name: 'Revenu régulier', values: P.map((p) => p.regulier), color: '#2ee6a6' }, { name: 'Autres rentrées', values: P.map((p) => p.autres), color: '#6b8cff' }])}</div>
     <div class="card"><h3>Dépenses</h3><p class="sub">Courantes vs ponctuelles (${esc(LB().ponctuels_desc)}).</p>${barChart(P.map(lab), [{ name: 'Courantes', values: P.map((p) => p.courante), color: '#ff9152' }, { name: 'Ponctuelles', values: P.map((p) => p.ponctuel), color: '#ff5d78' }])}</div>
@@ -590,14 +601,14 @@ function renderPrlv() {
   const byMonth = {};
   D.calendrier.forEach((c) => { const k = c.date.slice(0, 7); (byMonth[k] = byMonth[k] || []).push(c); });
   const calHtml = Object.entries(byMonth).map(([k, list]) => {
-    const tot = list.filter((c) => c.type === 'prelevement' && c.montant != null).reduce((a, b) => a + b.montant, 0);
+    const tot = list.filter((c) => (c.type === 'prelevement' || c.type === 'obligatoire') && c.montant != null).reduce((a, b) => a + b.montant, 0);
     const [y, m] = k.split('-').map(Number);
     return `<div class="daysep">${MOISL[m - 1]} ${y} · prélèvements <span class="num">${eurS(tot)}</span></div>${list.map(calRow).join('')}`;
   }).join('');
   const T = D.prets_totaux, PD = D.prets_detail, Lg = D.logement, R = D.resiliations;
   const series = PD.filter((p) => p.complet).map((p, i) => ({ name: p.categorie === 'immobilier' ? 'Immo ' + (i + 1) : 'Prêt perso', color: LCOL[i % LCOL.length], pts: D.crd_series.map((r) => [r[0], r[2][p.id] || 0]) }));
   series.unshift({ name: 'Total', color: '#2ee6a6', pts: D.crd_series.map((r) => [r[0], r[1]]) });
-  const lgParts = [['Prêt immobilier', Lg.pret_immo, '#6b8cff'], ['Syndic lissé', Lg.syndic_lisse, '#9b6bff'], ['Assurance habitation', Lg.assurance_habitation, '#2ee6a6'], ['Assurance de prêt', Lg.assurance_pret || 0, '#38bdf8']].filter((x) => x[1] > 0);
+  const lgParts = [['Prêt immobilier', Lg.pret_immo, '#6b8cff'], ['Charges appart (ta part, cagnotte)', Lg.charges_appart || 0, '#9b6bff'], ['Assurance habitation', Lg.assurance_habitation, '#2ee6a6'], ['Assurance de prêt', Lg.assurance_pret || 0, '#38bdf8']].filter((x) => x[1] > 0);
   $('#v-prlv').innerHTML = `<h2>Échéances</h2>
   <div class="grid2">
     <div class="metric"><div class="l">Prêts / mois</div><div class="v">${cu(D.total_prets, 'eur', 'g-acc')}</div><div class="d">${nf0.format(D.part_prets)} % du revenu régulier</div></div>
@@ -614,7 +625,7 @@ function renderPrlv() {
     <p class="sub" style="margin:8px 0 0">Courbes recalculées à partir du taux et de la durée ; la ligne à échéance progressive est approximative.</p></div>
   ${PD.map(loanCard).join('')}
   ${D.assurance_pret ? `<p class="sub" style="margin:-4px 6px 14px">Assurance de prêt : ${eur(D.assurance_pret.montant_mensuel)}/mois, comptée avec les assurances.</p>` : ''}
-  <div class="card"><h3>Logement</h3><p class="sub">Prêt immobilier, syndic lissé et assurances liées à l’appartement.</p>
+  <div class="card"><h3>Logement</h3><p class="sub">Prêt immobilier, ta part des charges (eau, gaz, copropriété via la cagnotte Livret A) et assurances.</p>
     <div class="bignum">${cu(Lg.total, 'eur')}<span class="mut" style="font-size:15px;font-weight:550;letter-spacing:0"> / mois</span></div>
     <div class="stack">${lgParts.map((x) => `<div style="flex:${x[1]};background:${x[2]}"></div>`).join('')}</div>
     ${lgParts.map((x) => `<div class="kv"><span><i style="display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:8px;background:${x[2]}"></i>${x[0]}</span><b class="num">${eur(x[1])}</b></div>`).join('')}
@@ -664,7 +675,7 @@ function patrimoineHtml() {
 }
 function objectifsHtml() {
   const O = D.objectifs;
-  return `<div class="alert bleu"><div class="ai">i</div><div><div class="at">Objectifs ${esc(O.statut || '')}</div><div class="ax">Calculés à partir de tes soldes au ${fdate(D.epargne.date)} et du virement d’épargne actuel.</div></div></div>
+  return `<div class="alert bleu"><div class="ai">i</div><div><div class="at">Objectifs ${esc(O.statut || '')}</div><div class="ax">Sur le LEP uniquement (le Livret A est la cagnotte charges). Rythme = capacité d’épargne du mois (${eur(D.conseils.montant_conseille, 1)}), si tu ne fais pas d’autres dépenses carte.</div></div></div>
   ${O.liste.map((o, i) => { const col = ['#2ee6a6', '#6b8cff', '#9b6bff', '#ff9152'][i % 4]; return `<div class="card">
     <div style="display:flex;gap:16px;align-items:center">${ring(o.pct, col, 84)}
     <div style="min-width:0"><h3>${esc(o.nom)}</h3><div class="sub" style="margin:0">${esc(o.description || '')}</div>
@@ -676,14 +687,23 @@ function objectifsHtml() {
   </div>`; }).join('')}
   <p class="foot">Les objectifs « Épargne de précaution » et « LEP » avancent avec le même virement mensuel.</p>`;
 }
+function cagnotteHtml() {
+  const G = D.cagnotte; if (!G) return ''; const cg = G.prochain_appel;
+  return `<div class="card"><h3>${esc(G.nom)} · ${esc(G.compte)}</h3><p class="sub">${eur(G.apport_mensuel.toi, 1)} toi + ${eur(G.apport_mensuel.partenaire, 1)} ${esc(LB().partage)} par mois · paie ${esc(G.paie)}. Pas un objectif d’épargne.</p>
+    <div class="bignum">${cu(G.solde, 'eur')}</div>
+    ${cg ? `<div class="kv"><span>Prochain appel copro vers le ${fshort(cg.date)}</span><b class="num neg">≈ ${eurS(-cg.estime, 1)}</b></div><div class="kv"><span>Solde prévu avant (+ ${cg.versements_d_ici_la} × 300 €)</span><b class="num">${eur(cg.solde_prevu_avant, 1)}</b></div>${cg.manque ? `<div class="kv"><span>Il manquerait</span><b class="num neg">≈ ${eur(cg.manque, 1)}</b></div>` : ''}` : ''}
+    <div class="daysep">Entrées et sorties</div>
+    ${G.mouvements.map((x) => `<div class="row">${av(x.qui === 'partenaire' ? 'E' : x.qui === 'sortie' ? 'SY' : 'D', x.qui === 'sortie' ? '#ff5d78' : x.qui === 'partenaire' ? '#9b6bff' : '#2ee6a6')}<div class="main"><div class="t">${esc(x.libelle)}</div><div class="s">${fdate(x.date)}</div></div><div class="amt num ${x.montant < 0 ? 'neg' : 'pos'}">${eurS(x.montant)}</div></div>`).join('')}</div>`;
+}
 function livretsHtml() {
   const E = D.epargne, pts = E.points, v = E.variation || {}, flux = E.flux, sd = E.sans_detail;
   return `<div class="card hero" style="border-color:rgba(46,230,166,.28);background:radial-gradient(120% 140% at 100% 0%,rgba(46,230,166,.22),transparent 55%),radial-gradient(120% 120% at 0% 100%,rgba(107,140,255,.18),transparent 55%),linear-gradient(160deg,#0f1d1c,#0b0f1d)">
-    <div class="lbl"><span>Livret A + LEP</span><span class="badge g" style="margin:0">au ${fdate(E.date)}</span></div>
-    <div class="big g-pos"><span class="num">${splitEur(E.livret_a + E.lep)}</span></div>
-    <div class="chips2"><span class="chip">Livret A <b class="num">${eur(E.livret_a)}</b></span><span class="chip">LEP <b class="num">${eur(E.lep)}</b></span><span class="chip">Parts sociales <b class="num">${eur(E.parts_sociales, 1)}</b></span></div>
+    <div class="lbl"><span>Épargne · LEP</span><span class="badge g" style="margin:0">au ${fdate(E.date)}</span></div>
+    <div class="big g-pos"><span class="num">${splitEur(E.lep)}</span></div>
+    <div class="chips2"><span class="chip">Livret A (cagnotte charges) <b class="num">${eur(E.livret_a)}</b></span><span class="chip">Parts sociales <b class="num">${eur(E.parts_sociales, 1)}</b></span></div>
     ${v.total ? `<div class="meta" style="margin-top:12px">Épargne nette depuis le ${fdate(pts[0].date)} : <b class="num ${glow(v.total.net)}">${eurS(v.total.net)}</b></div>` : ''}
   </div>
+  ${cagnotteHtml()}
   <div class="card"><h3>Évolution des livrets</h3><p class="sub">Soldes aux dates connues.</p>
   ${lineChart({ dots: true, series: [{ name: 'Total', color: '#2ee6a6', pts: pts.map((p) => [p.date, p.total]) }, { name: 'LEP', color: '#6b8cff', pts: pts.map((p) => [p.date, p.lep]) }, { name: 'Livret A', color: '#ff9152', pts: pts.map((p) => [p.date, p.livret_a]) }] })}</div>
   <div class="card"><h3>Versements et retraits</h3><p class="sub">Mouvements entre ton compte et tes livrets (ni revenus ni dépenses).</p>
@@ -696,7 +716,7 @@ function livretsHtml() {
   ${v.note ? `<p class="sub" style="margin:10px 0 0">${esc(v.note)}</p>` : ''}</div>
   <div class="card"><h3>Points à confirmer</h3>${E.doutes.map((n) => `<p class="sub" style="margin:6px 0">• ${esc(n)}</p>`).join('')}</div>`;
 }
-const KIND = { interne: ['Interne', 'b'], regulier: ['Revenu', 'g'], partage_out: ['Partage de frais', ''], autre_rentree: ['Rentrée', 'g'], ponctuel: ['Ponctuel', 'w'], courante: ['', ''], remboursement: ['Remboursement', 'g'] };
+const KIND = { interne: ['Interne', 'b'], regulier: ['Revenu', 'g'], partage_out: ['Partage de frais', ''], autre_rentree: ['Rentrée', 'g'], ponctuel: ['Ponctuel', 'w'], courante: ['', ''], remboursement: ['Remboursement', 'g'], cagnotte: ['Cagnotte charges', 'b'] };
 function renderOps(filter, q) {
   const root = $('#v-ops'); const ql = q.trim().toLowerCase();
   const list = D.operations.filter((o) => {
