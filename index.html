@@ -245,6 +245,41 @@ details.manf>summary>span:first-child{display:flex;flex-direction:column;gap:3px
 #manForm input,#manForm select{width:100%;box-sizing:border-box;padding:12px;border-radius:13px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:inherit;font:inherit;font-size:16px;min-height:46px}
 #manForm select option{background:#111}#manForm .btn{padding:13px}
 .del{display:block;margin:4px 0 0 auto;border:1px solid rgba(255,93,120,.35);background:transparent;color:var(--neg);border-radius:999px;font-size:11.5px;padding:3px 10px;font-weight:600}
+
+/* v9 */
+body:not(.show-carte) .carte-only{display:none!important}
+.eyebrow{font-size:11px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+#v-accueil>.hc-tile{order:0}#v-accueil>.tl{order:2}
+#v-accueil .card>h3,#v-accueil .card h3{font-size:15.5px;letter-spacing:-.01em}
+.hc-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hc-tile{border-color:rgba(52,211,153,.22)!important;background:radial-gradient(120% 120% at 100% 0%,rgba(52,211,153,.16),transparent 55%),linear-gradient(180deg,#141a18,#0f0f12)!important}
+.hc-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:10px;margin:14px 0 6px}
+.hc-cell{border:1px solid var(--line);border-radius:18px;padding:12px 13px;background:rgba(255,255,255,.03)}
+.hc-cell.hi{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.25)}
+.hc-cell .l{font-size:12px;color:var(--mut)}.hc-cell .v{font-size:23px;font-weight:720;letter-spacing:-.03em;margin:3px 0 2px;white-space:nowrap}.hc-cell .d{font-size:11.5px;color:var(--mut);line-height:1.35}
+.wf{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.wf-r{display:grid;grid-template-columns:112px 1fr auto;align-items:center;gap:10px;font-size:12.5px;color:var(--mut)}.wf-r b{color:#e4e4e7;font-size:13px;min-width:78px;text-align:right}
+.wf-t{height:7px;border-radius:99px;background:rgba(255,255,255,.05);overflow:hidden}.wf-b{height:100%;border-radius:99px;transform-origin:left;animation:wfg .9s var(--ease) both}
+.wf-r.tot{padding-top:7px;border-top:1px solid var(--line)}.wf-r.tot span{color:#e4e4e7;font-weight:600}.wf-r.tot .wf-t{background:none}
+@keyframes wfg{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.cbox{margin-top:10px;padding:4px 12px;border:1px dashed rgba(250,204,21,.35);border-radius:14px}
+.tgl{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--mut);border-radius:999px;padding:5px 10px 5px 5px;font-size:11.5px;font-weight:600;white-space:nowrap;flex:none}
+.tgl i{position:relative;width:26px;height:16px;border-radius:99px;background:rgba(255,255,255,.14);transition:background .25s}
+.tgl i::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.tgl.on{color:#fde68a;border-color:rgba(250,204,21,.4)}.tgl.on i{background:#eab308}.tgl.on i::after{transform:translateX(10px)}
+.tl-list{position:relative}
+.tl-row{display:grid;grid-template-columns:34px 14px 1fr auto;align-items:center;gap:8px;padding:9px 0;position:relative}
+.tl-row+.tl-row{border-top:1px solid rgba(255,255,255,.04)}
+.tl-date{text-align:center;line-height:1}.tl-date b{display:block;font-size:16px;font-weight:700}.tl-date span{font-size:10px;color:var(--mut)}
+.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent),0 0 12px var(--c);justify-self:center}
+.tl-row .main{min-width:0}.tl-row .t{font-size:14px;font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tl-row .s{font-size:11.5px;color:var(--mut)}
+.tl-row .amt{text-align:right;font-size:14px;font-weight:650}.tl-row .amt small{display:block;font-size:10.5px;color:var(--mut);font-weight:500}
+.tl-more summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;font-size:13px;color:#a5b4fc;cursor:pointer}.tl-more summary::-webkit-details-marker{display:none}
+.tl-more .chev{transition:transform .2s}.tl-more[open] .chev{transform:rotate(90deg)}
+.press{animation:tapb .38s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tapb{0%{transform:scale(1)}35%{transform:scale(.965)}100%{transform:scale(1)}}
+nav button.on svg{animation:pop .45s cubic-bezier(.34,1.56,.64,1)}@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.press,.wf-b,nav button.on svg{animation:none}}
 </style>
 </head>
 <body>
@@ -467,8 +502,19 @@ function bindSeg(root, id, fn) { root.querySelectorAll(`[data-seg="${id}"] butto
 
 /* ---------------- views ---------------- */
 const ST = { budget: { mode: 'budgets', vue: 'releves', catp: 'moy', bilan: null }, pat: { mode: 'patrimoine' } };
+try { ST.carte = localStorage.getItem('mf-carte') === '1'; } catch (e) { ST.carte = false; }
+const haptic = () => { try { if (navigator.vibrate) navigator.vibrate(8); } catch (e) {} };
+document.addEventListener('pointerdown', (e) => { const t = e.target.closest('.card[onclick],.metric[onclick],button,.tl-row,summary'); if (!t) return; t.classList.remove('press'); void t.offsetWidth; t.classList.add('press'); if (t.matches('button,summary')) haptic(); }, { passive: true });
+const carteSwitch = () => `<button class="tgl ${ST.carte ? 'on' : ''}" data-carte aria-pressed="${ST.carte}"><i></i><span>Dépenses carte</span></button>`;
+function bindCarte(root) {
+  root.querySelectorAll('[data-carte]').forEach((b) => b.addEventListener('click', (ev) => {
+    ev.stopPropagation(); ST.carte = !ST.carte; try { localStorage.setItem('mf-carte', ST.carte ? '1' : '0'); } catch (e) {}
+    document.body.classList.toggle('show-carte', ST.carte); const y = window.scrollY; renderAccueil(); renderBudget(); window.scrollTo(0, y);
+  }));
+}
 function render() {
   $('#dataDate').textContent = 'Données au ' + fdate(D.donnees_au);
+  document.body.classList.toggle('show-carte', !!ST.carte);
   ST.budget.bilan = ST.budget.bilan || (D.bilans.length ? D.bilans[D.bilans.length - 1].id : null);
   renderAccueil(); renderBudget(); renderPrlv(); bindSim(); renderPat(); renderOps(ST.opsf || 'all', '');
   let t = 'accueil'; try { t = sessionStorage.getItem('mf-tab') || 'accueil'; } catch (e) {}
@@ -510,17 +556,20 @@ function renderAccueil() {
     <div class="meta">Solde au ${fdate(D.solde_date)}</div>
     <div class="chips2">
       ${(D.en_cours && D.en_cours.length) || D.manuel_total ? `<span class="chip">${D.manuel_total ? 'Avec en cours et saisies' : 'Avec carte en cours'} <b class="num">${eur(D.solde_dispo)}</b></span>` : ''}
-      <span class="chip">Fin ${esc(E.mois.split(' ')[0])} <b class="num ${cls(E.solde_apres_prelevements)}">${eur(E.solde_apres_prelevements)}</b></span>
+      <span class="chip">Fin ${esc(E.mois.split(' ')[0])} hors carte <b class="num ${cls(E.solde_apres_prelevements)}">${eur(E.solde_apres_prelevements)}</b></span>
     </div>
     ${lineChart({ series: [{ pts: spark, color: '#a5b4fc' }], step: true, area: true, bare: true, h: 70 })}
   </div>
+  ${hcTile()}
   ${alertsHtml({ limit: 4 })}
+  ${tlHtml()}
   <div class="card">
-    <h3>Les 14 prochains jours</h3><p class="sub">Solde projeté avec la carte en cours, les prélèvements, ta paie (le 3, ou le lundi si week-end) et le virement d’épargne du 7.</p>
+    <h3>Les 14 prochains jours · hors carte</h3><p class="sub">Solde projeté sans opérations carte : prélèvements et paie (le 3, ou le lundi si week-end). Le virement LEP est compté à part.</p>
     <div class="grid2" style="margin-bottom:6px"><div><div class="sub" style="margin:0">Point bas</div><div class="num ${P.min.solde < 0 ? 'g-neg' : P.min.solde < 50 ? 'warn' : 'g-acc'}" style="font-size:26px;font-weight:750">${eur(P.min.solde)}</div><div class="sub" style="margin:0">${flong(P.min.date)}</div></div>
     <div><div class="sub" style="margin:0">Au ${fshort(P.horizon)}</div><div class="num g-acc" style="font-size:26px;font-weight:750">${eur(P.points[P.points.length - 1][1])}</div><div class="sub" style="margin:0">après paie et échéances</div></div></div>
     ${projPts.length > 1 ? lineChart({ series: [{ pts: projPts, color: '#34d399' }], step: true, area: true, h: 120 }) : ''}
     ${P.gros.length ? `<div class="daysep">Gros prélèvements (≥ 50 €)</div>` + P.gros.map((g) => `<div class="row">${av(g.nom, g.solde_bas ? '#f87171' : null)}<div class="main"><div class="t">${esc(g.nom)}</div><div class="s">${flong(g.date)} · avant <span class="num">${eur(g.avant)}</span> → après <span class="num ${g.solde_bas ? 'neg' : ''}">${eur(g.apres)}</span>${g.solde_bas ? ' <span class="badge r">solde bas</span>' : ''}${g.incertain ? ' <span class="badge w">incertain</span>' : ''}</div></div><div class="amt num">${eurS(g.montant)}</div></div>`).join('') : '<p class="sub" style="margin:8px 0 0">Aucun prélèvement de 50 € ou plus dans les 14 jours.</p>'}
+    ${(P.epargne_prevue || []).map((x) => `<div class="kv"><span>${fshort(x.date)} · ${esc(x.nom)} <span class="badge b">épargne</span></span><b class="num" style="color:#c084fc">${eurS(x.montant)} <span class="mut" style="font-weight:500">non déduit</span></b></div>`).join('')}
     ${P.appel_cagnotte ? `<p class="sub" style="margin:10px 0 0">Appel de copropriété vers le ${fshort(P.appel_cagnotte.date)} : payé par la cagnotte charges (Livret A), pas par ce compte.</p>` : ''}
   </div>
   ${pend.length ? `<div class="card"><h3>En attente</h3><p class="sub">Pas encore dans le solde de ${eur(D.solde)}.</p>${pend.map((o) => `<div class="row">${av(o.libelle, o.avenir ? '#c084fc' : '#fb923c')}<div class="main"><div class="t">${esc(o.avenir ? (o.libelle || 'Opération à venir') : o.libelle)}</div><div class="s">${o.avenir ? (o.date ? flong(o.date) + ' · ' : '') + esc(o.note || '') : 'Carte en cours' + (o.date ? ' · ' + flong(o.date) : '')}</div></div><div class="amt num neg">${eurS(o.montant)}</div></div>`).join('')}</div>` : ''}
@@ -530,26 +579,27 @@ function renderAccueil() {
     <span class="more">Voir tous les budgets ${ICON.chev}</span>
   </div>
   <div class="card" ${goto('budget', "ST.budget.mode='conseils';renderBudget()")} style="cursor:pointer">
-    <h3>Capacité d’épargne · ${esc(C.mois)}</h3><p class="sub">Salaire moins les dépenses obligatoires, si tu ne fais aucune autre dépense carte</p>
+    <h3>Reste par mois · ${esc(C.mois)}</h3><p class="sub">Hors paiements par carte : salaire moins prélèvements et virements obligatoires</p>
     <div class="bignum">${cu(C.capacite, 'eur0', glow(C.capacite))}</div>
     <div class="kv"><span>Salaire</span><b class="num pos">${eurS(C.salaire)}</b></div>
     <div class="kv"><span>Prélèvements obligatoires</span><b class="num neg">${eurS(-C.total_prelevements)}</b></div>
     <div class="kv"><span>Charges appart (Livret A)</span><b class="num neg">${eurS(-C.charges_appart)}</b></div>
     <div class="kv"><span>Courses avec ${esc(LB().partage)} (Revolut)</span><b class="num neg">${eurS(-C.courses)}</b></div>
-    <div class="kv"><span class="mut">Avec tes dépenses carte habituelles (≈ ${eur(C.depenses_carte_moyennes, 1)}/mois)</span><b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes)}</b></div>
+    <div class="kv"><span>Dès janvier, sans Fitness Park</span><b class="num pos">${eurS(C.capacite_sans_fitness)}</b></div>
+    <div class="kv carte-only"><span class="mut">Avec tes dépenses carte habituelles (≈ ${eur(C.depenses_carte_moyennes, 1)}/mois)</span><b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes)}</b></div>
     <span class="more">Voir le détail ${ICON.chev}</span>
   </div>
   <div class="card">
     <h3>Estimation fin ${esc(E.mois)}</h3>
-    <p class="sub">Estimation, pas un solde constaté · avant tes paiements par carte</p>
+    <p class="sub">Estimation, pas un solde constaté · hors paiements par carte</p>
     <div class="bignum">${cu(E.solde_apres_prelevements, 'eur', glow(E.solde_apres_prelevements))}</div>
     <div class="kv"><span>Solde au ${fdate(E.date_depart)}</span><b class="num">${eur(E.solde_depart)}</b></div>
     ${(E.en_cours || []).map((o) => `<div class="kv"><span>Carte en cours · ${esc(o.libelle)}</span><b class="num neg">${eurS(o.montant)}</b></div>`).join('')}
     ${(E.a_venir || []).filter((o) => !o.date || o.date <= E.fin).map((o) => `<div class="kv"><span>À venir · ${esc(o.libelle || 'opération')}</span><b class="num neg">${eurS(o.montant)}</b></div>`).join('')}
     ${E.prelevements.map((p) => `<div class="kv"><span>${fshort(p.date)} · ${esc(p.nom)}</span><b class="num neg">${eurS(p.montant)}</b></div>`).join('')}
     ${E.incertains.map((p) => `<div class="kv"><span>${fshort(p.date)} · ${esc(p.nom)} <span class="badge w">incertain</span></span><b class="num mut">${eurS(p.montant)}</b></div>`).join('')}
-    <div class="kv total"><span><b>Solde estimé fin ${esc(E.mois.split(' ')[0])}</b></span><b class="num ${glow(E.solde_apres_prelevements)}" style="font-size:17px">${eur(E.solde_apres_prelevements)}</b></div>
-    <div class="kv"><span class="mut">Avec tes dépenses carte moyennes (${eur(E.depenses_variables_jour)}/jour × ${E.jours_restants} j)</span><b class="num ${cls(E.solde_avec_depenses_moyennes)}">${eur(E.solde_avec_depenses_moyennes)}</b></div>
+    <div class="kv total"><span><b>Fin ${esc(E.mois.split(' ')[0])} hors carte</b></span><b class="num ${glow(E.solde_apres_prelevements)}" style="font-size:17px">${eur(E.solde_apres_prelevements)}</b></div>
+    <div class="kv carte-only"><span class="mut">Avec tes dépenses carte moyennes (${eur(E.depenses_variables_jour)}/jour × ${E.jours_restants} j)</span><b class="num ${cls(E.solde_avec_depenses_moyennes)}">${eur(E.solde_avec_depenses_moyennes)}</b></div>
     ${E.prochaine_paie ? `<div class="kv"><span class="mut">Paie attendue le ${pd(E.prochaine_paie.date).getDate()} ${MOISL[pd(E.prochaine_paie.date).getMonth()]}</span><b class="num pos">≈ ${eurS(E.prochaine_paie.montant, 1)}</b></div>` : ''}
     ${D.decouvert_autorise ? `<p class="sub" style="margin:8px 0 0">Découvert autorisé : ${eur(D.decouvert_autorise.montant, 1)} (taux débiteur ${nf2.format(D.decouvert_autorise.taux_debiteur)} %).</p>` : ''}
   </div>
@@ -557,13 +607,14 @@ function renderAccueil() {
     <div class="metric"><div class="ic" style="background:rgba(46,230,166,.14);color:var(--pos)">${ICON.wallet}</div><div class="l">Épargne (LEP)</div><div class="v">${cu(ep.lep, 'eur0', 'g-pos')}</div><div class="d">cagnotte charges ${eur(D.cagnotte.solde, 1)}</div></div>
     <div class="metric" ${goto('epargne', "ST.pat.mode='patrimoine';renderPat()")}><div class="ic" style="background:rgba(107,140,255,.16);color:var(--acc)">${ICON.layers}</div><div class="l">Patrimoine net</div><div class="v">${cu(D.patrimoine_detail.net, 'eur0', glow(D.patrimoine_detail.net))}</div><div class="d">brut ${eur(D.patrimoine_detail.brut, 1)}</div></div>
     <div class="metric"><div class="ic" style="background:rgba(155,107,255,.16);color:var(--acc2)">${ICON.home}</div><div class="l">Prêts / mois</div><div class="v">${cu(D.total_prets, 'eur0')}</div><div class="d">${nf0.format(D.part_prets)} % du revenu régulier</div></div>
-    <div class="metric"><div class="ic" style="background:${eq < 0 ? 'rgba(255,93,120,.15)' : 'rgba(46,230,166,.14)'};color:${eq < 0 ? 'var(--neg)' : 'var(--pos)'}">${ICON.scale}</div><div class="l">Équilibre mensuel</div><div class="v">${cu(eq, 'eurS0', glow(eq))}</div><div class="d">moyenne, charges et courses incluses</div></div>
+    <div class="metric"><div class="ic" style="background:rgba(46,230,166,.14);color:var(--pos)">${ICON.scale}</div><div class="l">Reste / mois hors carte</div><div class="v">${cu(C.capacite, 'eurS0', glow(C.capacite))}</div><div class="d">${eurS(C.capacite_sans_fitness, 1)} dès janvier<span class="carte-only"> · avec carte ${eurS(eq, 1)}</span></div></div>
   </div>
   ${bentoDonut()}
   ${cagTile()}
   ${douzeHtml()}
   <div class="foot">${D.regles.map(esc).join('<br>')}<br>Mis à jour le ${esc(D.genere_le.replace('T', ' à '))}</div>`;
   bindSeg($('#v-accueil'), 'm12', (v) => { ST.m12 = v; renderAccueil(); });
+  bindCarte($('#v-accueil'));
 }
 /* ---- Budget tab ---- */
 function renderBudget() {
@@ -576,6 +627,7 @@ function renderBudget() {
   else body = analyseHtml();
   root.innerHTML = head + body;
   bindSeg(root, 'bmode', (v) => { S.mode = v; renderBudget(); });
+  bindCarte(root);
   bindSeg(root, 'vue', (v) => { S.vue = v; renderBudget(); });
   bindSeg(root, 'catp', (v) => { S.catp = v; renderBudget(); });
   bindSeg(root, 'bil', (v) => { S.bilan = v; renderBudget(); });
@@ -598,20 +650,20 @@ function budgetsHtml() {
 function conseilsHtml() {
   const C = D.conseils, G = D.cagnotte, cg = G && G.prochain_appel;
   return `<div class="card hero" style="border-color:rgba(46,230,166,.25);background:radial-gradient(120% 140% at 100% 0%,rgba(46,230,166,.18),transparent 55%),linear-gradient(160deg,#101a22,#0b0f1d)">
-    <div class="lbl"><span>Capacité d’épargne · ${esc(C.mois)}</span></div>
+    <div class="lbl"><span>Reste par mois · hors carte · ${esc(C.mois)}</span>${carteSwitch()}</div>
     <div class="big ${glow(C.capacite)}">${cu(C.capacite, 'eur0')}</div>
-    <div class="meta" style="margin-top:6px">Si tu ne fais aucune autre dépense carte. Sans Fitness Park (résiliation en cours) : <b class="num">${eur(C.capacite_sans_fitness, 1)}</b>.</div>
-    <div class="chips2"><span class="chip">Avec tes dépenses carte habituelles <b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes, 1)}</b></span></div></div>
+    <div class="meta" style="margin-top:6px">${esc(C.message)}</div>
+    <div class="chips2"><span class="chip">Sans Fitness Park <b class="num">${eurS(C.capacite_sans_fitness, 1)}</b></span>${D.hors_carte ? `<span class="chip">Fin ${esc(D.hors_carte.fin_mois_suivant.mois.split(' ')[0])} hors carte <b class="num">${eur(D.hors_carte.fin_mois_suivant.solde, 1)}</b></span>` : ''}<span class="chip carte-only">Avec carte habituelle <b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes, 1)}</b></span></div></div>
   <div class="card"><h3>Le calcul</h3><p class="sub">${esc(C.regle)}</p>
     <div class="kv"><span>Salaire attendu le ${fshort(C.date_paie)}</span><b class="num pos">${eurS(C.salaire)}</b></div>
     ${C.groupes.map((g) => `<div class="kv"><span>${esc(g.groupe)}${g.groupe === 'Sport' && C.fitness ? ' <span class="badge w">en cours de résiliation</span>' : ''}</span><b class="num neg">${eurS(-g.montant)}</b></div>`).join('')}
     <div class="kv"><span>Charges appart → cagnotte Livret A (ta part)</span><b class="num neg">${eurS(-C.charges_appart)}</b></div>
     <div class="kv"><span>Courses avec ${esc(LB().partage)} → Revolut</span><b class="num neg">${eurS(-C.courses)}</b></div>
-    <div class="kv total"><span><b>Capacité d’épargne</b></span><b class="num ${glow(C.capacite)}" style="font-size:17px">${eurS(C.capacite)}</b></div>
+    <div class="kv total"><span><b>Reste hors carte</b></span><b class="num ${glow(C.capacite)}" style="font-size:17px">${eurS(C.capacite)}</b></div>
     <div class="kv"><span class="mut">Sans Fitness Park (${eur(C.fitness)})</span><b class="num ${cls(C.capacite_sans_fitness)}">${eurS(C.capacite_sans_fitness)}</b></div>
-    <div class="kv"><span class="mut">Avec tes dépenses carte habituelles (moyenne ${eur(C.depenses_carte_moyennes)}/mois)</span><b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes)}</b></div>
-    <div class="kv"><span class="mut">Avec tes budgets carte (${eur(C.variable_budgets, 1)}/mois)</span><b class="num ${cls(C.reste_avec_budgets)}">${eurS(C.reste_avec_budgets)}</b></div>
-    <p class="sub" style="margin:10px 0 0">${esc(C.message)} Solde le plus bas avant la paie : ${eur(C.solde_avant_paie)}.</p>
+    <div class="kv carte-only"><span class="mut">Avec tes dépenses carte habituelles (moyenne ${eur(C.depenses_carte_moyennes)}/mois)</span><b class="num ${cls(C.reste_avec_habitudes)}">${eurS(C.reste_avec_habitudes)}</b></div>
+    <div class="kv carte-only"><span class="mut">Avec tes budgets carte (${eur(C.variable_budgets, 1)}/mois)</span><b class="num ${cls(C.reste_avec_budgets)}">${eurS(C.reste_avec_budgets)}</b></div>
+    <p class="sub" style="margin:10px 0 0">Sans opérations carte. Solde le plus bas avant la paie : ${eur(C.solde_avant_paie)}.<span class="carte-only"> ${esc(C.message_carte || '')}</span></p>
   </div>
   <div class="card"><h3>Prélèvements obligatoires de ${esc(C.mois.split(' ')[0])}</h3><p class="sub">Total ${eur(C.total_prelevements)} · d’après les mois précédents</p>
     ${C.prelevements.map((p) => `<div class="kv"><span>${fshort(p.date)} · ${esc(p.nom)}${p.statut ? ' <span class="badge w">' + esc(p.statut) + '</span>' : p.incertain ? ' <span class="badge w">incertain</span>' : ''}</span><b class="num">${eur(p.montant)}</b></div>`).join('')}</div>
@@ -818,20 +870,52 @@ function cagTile() {
     <div class="bignum">${cu(G.solde, 'eur')}</div>
     ${cg ? `<div class="kv"><span>Appel copro ≈ ${fshort(cg.date)}</span><b class="num">≈ ${eur(cg.estime, 1)}</b></div>${cg.manque ? `<div class="kv"><span>Il manquerait</span><b class="num neg">≈ ${eur(cg.manque, 1)}</b></div>` : ''}` : ''}</div>`;
 }
+function hcTile() {
+  const H = D.hors_carte; if (!H) return '';
+  const a = H.fin_mois, b = H.fin_mois_suivant, mn = (x) => x.split(' ')[0], E = D.estimation, T = D.douze_mois || {};
+  const withC = (T.solde_habitudes || []).find((p) => p[0] === b.date);
+  const wf = [['Départ fin ' + mn(a.mois), b.depart, '#818cf8'], ['Salaire', b.rentrees, '#34d399'], ['Prélèvements', b.prelevements, '#fb923c'], ['Charges + courses', b.cagnotte_courses, '#f472b6']];
+  const mx = Math.max(...wf.map((w) => Math.abs(w[1])), 1);
+  return `<div class="card hc-tile">
+    <div class="hc-head"><span class="eyebrow">Fin de mois · hors carte</span>${carteSwitch()}</div>
+    <div class="hc-grid">
+      <div class="hc-cell"><div class="l">Fin ${esc(mn(a.mois))}</div><div class="v ${glow(a.solde)}">${cu(a.solde, 'eur')}</div><div class="d">${a.prelevements ? eurS(a.prelevements) + ' de prélèvements d’ici là' : 'plus de prélèvement ce mois'}</div></div>
+      <div class="hc-cell hi"><div class="l">Fin ${esc(mn(b.mois))}</div><div class="v ${glow(b.solde)}">${cu(b.solde, 'eur')}</div><div class="d">${b.epargne ? eur(b.solde_apres_epargne) + ' après le virement LEP' : ''}</div></div>
+    </div>
+    <div class="wf">${wf.map((w) => `<div class="wf-r"><span>${esc(w[0])}</span><div class="wf-t"><div class="wf-b" style="width:${(100 * Math.abs(w[1]) / mx).toFixed(1)}%;background:${w[2]}"></div></div><b class="num">${eurS(w[1], 1)}</b></div>`).join('')}
+      <div class="wf-r tot"><span>= Fin ${esc(mn(b.mois))}</span><div class="wf-t"></div><b class="num ${glow(b.solde)}">${eur(b.solde, 1)}</b></div></div>
+    <p class="sub" style="margin:10px 0 0">Sans opérations carte : ${esc(H.explication.replace(/^Seulement /, 'seulement '))}${b.epargne ? ' Le virement LEP (' + eur(-b.epargne, 1) + ') est de l’épargne, montré à part.' : ''}</p>
+    <div class="carte-only cbox"><div class="kv"><span>Avec dépenses carte moyennes · fin ${esc(mn(a.mois))}</span><b class="num ${cls(E.solde_avec_depenses_moyennes)}">${eur(E.solde_avec_depenses_moyennes)}</b></div>${withC ? `<div class="kv"><span>… fin ${esc(mn(b.mois))} (carte habituelle)</span><b class="num ${cls(withC[1])}">${eur(withC[1])}</b></div>` : ''}</div>
+  </div>`;
+}
+function tlHtml(limit = 6) {
+  const H = D.hors_carte, T = (H && H.timeline) || []; if (!T.length) return '';
+  const row = (t) => {
+    const col = t.type === 'rentree' ? '#34d399' : t.type === 'interne' ? '#c084fc' : t.type === 'charge' ? '#94a3b8' : t.type === 'obligatoire' ? '#f472b6' : t.pret ? '#818cf8' : '#fb923c';
+    const sub = t.note ? esc(t.note) : t.type === 'rentree' ? 'Paie' : t.type === 'obligatoire' ? 'Virement obligatoire' : t.pret ? 'Échéance de prêt' : 'Prélèvement';
+    return `<div class="tl-row" style="--c:${col}"><div class="tl-date"><b>${pd(t.date).getDate()}</b><span>${MOIS[pd(t.date).getMonth()]}</span></div><div class="tl-dot"></div><div class="main"><div class="t">${esc(t.nom)}</div><div class="s">${sub}${t.incertain ? ' · date estimée' : ''}</div></div><div class="amt"><span class="num ${t.montant > 0 ? 'pos' : t.type === 'interne' ? 'mut' : ''}">${t.montant == null ? '≈ ' + eurS(t.dernier, 1) : eurS(t.montant)}</span><small>${t.type === 'interne' || t.montant == null ? 'non déduit' : 'solde ' + eur(t.solde, 1)}</small></div></div>`;
+  };
+  const first = T.slice(0, limit), rest = T.slice(limit), last = T[T.length - 1];
+  return `<div class="card tl" ${''}><h3>Prochains prélèvements</h3><p class="sub">Jusqu’au ${fdate(H.fin_mois_suivant.date)} · solde hors carte après chaque ligne</p>
+    <div class="tl-list">${first.map(row).join('')}</div>
+    ${rest.length ? `<details class="tl-more"><summary><span>Voir les ${rest.length} suivants</span><span class="chev">›</span></summary><div class="tl-list">${rest.map(row).join('')}</div></details>` : ''}</div>`;
+}
 function douzeHtml() {
   const T = D.douze_mois; if (!T) return '';
   const mode = ST.m12 || 'solde', last = (a) => a[a.length - 1];
   const S = mode === 'solde'
-    ? [{ name: 'Historique', color: '#818cf8', pts: T.solde_hist }, { name: 'En tenant tes budgets', color: '#34d399', pts: T.solde_budgets, dash: true }, { name: 'Au rythme habituel', color: '#f87171', pts: T.solde_habitudes, dash: true }]
-    : [{ name: 'Historique', color: '#818cf8', pts: T.patrimoine_hist }, { name: 'Prêts seuls', color: '#38bdf8', pts: T.patrimoine_prets, dash: true }, { name: 'En tenant tes budgets', color: '#34d399', pts: T.patrimoine_budgets, dash: true }].concat(T.patrimoine_habitudes ? [{ name: 'Au rythme habituel', color: '#f87171', pts: T.patrimoine_habitudes, dash: true }] : []);
+    ? [{ name: 'Historique', color: '#818cf8', pts: T.solde_hist }].concat(T.solde_hors_carte ? [{ name: 'Hors carte', color: '#34d399', pts: T.solde_hors_carte, dash: true }] : []).concat(ST.carte ? [{ name: 'Avec budgets carte', color: '#facc15', pts: T.solde_budgets, dash: true }, { name: 'Carte habituelle', color: '#f87171', pts: T.solde_habitudes, dash: true }] : [])
+    : [{ name: 'Historique', color: '#818cf8', pts: T.patrimoine_hist }].concat(T.patrimoine_hors_carte ? [{ name: 'Hors carte', color: '#34d399', pts: T.patrimoine_hors_carte, dash: true }] : []).concat([{ name: 'Prêts seuls', color: '#38bdf8', pts: T.patrimoine_prets, dash: true }]).concat(ST.carte ? [{ name: 'Avec budgets carte', color: '#facc15', pts: T.patrimoine_budgets, dash: true }, { name: 'Carte habituelle', color: '#f87171', pts: T.patrimoine_habitudes, dash: true }] : []);
   const lbl = (d) => MOIS[pd(d).getMonth()] + ' ' + pd(d).getFullYear();
-  return `<div class="card"><h3>Sur 12 mois</h3><p class="sub" style="margin:0 0 4px">Historique + 12 fins de mois à venir.</p><p class="sub">${mode === 'solde' ? `Solde du compte : réel depuis le ${fdate(T.debut)}, puis estimé en fin de mois (pointillés).` : 'Patrimoine net : reconstitué aux dates de relevé, puis projeté (pointillés).'}</p>
+  return `<div class="card"><div class="hc-head"><h3 style="margin:0">Sur 12 mois</h3>${carteSwitch()}</div><p class="sub" style="margin:4px 0 4px">Historique + 12 fins de mois à venir · ${ST.carte ? 'avec et sans dépenses carte' : 'hors paiements par carte'}.</p><p class="sub">${mode === 'solde' ? `Solde du compte : réel depuis le ${fdate(T.debut)}, puis estimé en fin de mois (pointillés).` : 'Patrimoine net : reconstitué aux dates de relevé, puis projeté (pointillés).'}</p>
     ${seg('m12', [['solde', 'Solde du compte'], ['patrimoine', 'Patrimoine net']], mode)}
     ${lineChart({ series: S, area: true, marker: T.aujourdhui, h: 190 })}
     <div class="kv"><span>Aujourd’hui</span><b class="num">${eur(mode === 'solde' ? D.solde_dispo : last(T.patrimoine_hist)[1], 1)}</b></div>
     ${S.slice(1).map((x) => `<div class="kv"><span><i style="display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:8px;background:${x.color}"></i>${esc(x.name)} · ${lbl(last(x.pts)[0])}</span><b class="num ${cls(last(x.pts)[1])}">${eurS(last(x.pts)[1], 1)}</b></div>`).join('')}
-    ${T.delta_budgets_2027 != null ? `<div class="kv"><span>Par mois, budgets / habituel</span><b class="num">${eurS(T.delta_budgets)} / ${eurS(T.delta_habitudes)} <span class="mut" style="font-weight:500">en déc.</span></b></div><div class="kv"><span>Dès janvier (sans Fitness Park)</span><b class="num">${eurS(T.delta_budgets_2027)} / ${eurS(T.delta_habitudes_2027)}</b></div>` : ''}
-    ${mode === 'solde' && T.lep ? `<div class="alert bleu" style="margin-top:10px"><div class="ai">${ICON.info}</div><div><div class="at">Le virement LEP n’est pas une perte</div><div class="ax">Ces courbes ne comptent pas les virements vers le LEP. Si tu continues ${eur(T.lep.virement, 1)}/mois, le compte baisse d’autant mais le LEP monte : ${eur(T.lep.actuel, 1)} → ≈ ${eur(T.lep.apres_12, 1)} dans 12 mois. Ton patrimoine ne change pas.</div></div></div>` : ''}
+    ${T.mois && T.mois[0].hors_carte != null ? `<div class="kv"><span>Par mois hors carte</span><b class="num pos">${eurS(T.mois[0].hors_carte)} <span class="mut" style="font-weight:500">en ${MOIS[pd(T.mois[0].fin).getMonth()]}</span> · ${eurS(T.mois[1].hors_carte)} <span class="mut" style="font-weight:500">ensuite</span></b></div>` : ''}
+    ${ST.carte && T.delta_budgets_2027 != null ? `<div class="kv"><span>Avec carte : budgets / habituel</span><b class="num">${eurS(T.delta_budgets)} / ${eurS(T.delta_habitudes)} <span class="mut" style="font-weight:500">puis</span> ${eurS(T.delta_budgets_2027)} / ${eurS(T.delta_habitudes_2027)}</b></div>` : ''}
+    ${!ST.carte ? `<p class="sub" style="margin:8px 0 0">Courbe sans aucune dépense carte : c’est ce qui reste pour la carte et l’épargne. Active « Dépenses carte » pour comparer.</p>` : ''}
+    ${mode === 'solde' && T.lep ? `<div class="alert bleu" style="margin-top:10px"><div class="ai">${ICON.info}</div><div><div class="at">Le virement LEP n’est pas une perte</div><div class="ax">Les courbes ne comptent pas les virements vers le LEP. Si tu continues ${eur(T.lep.virement, 1)}/mois, le compte baisse d’autant mais le LEP monte : ${eur(T.lep.actuel, 1)} → ≈ ${eur(T.lep.apres_12, 1)} dans 12 mois. Ton patrimoine ne change pas.</div></div></div>` : ''}
     ${mode !== 'solde' ? `<p class="sub" style="margin:8px 0 0">Les virements vers le LEP ne changent pas le patrimoine (argent déplacé du compte vers le LEP).</p>` : ''}
     <details class="hyp"><summary>Hypothèses (estimations)</summary><p class="sub">${esc(T.hypotheses)}</p></details></div>`;
 }
@@ -962,8 +1046,16 @@ function applyManual(X) {
     B.lignes.sort((a, b) => b.pct - a.pct);
     X.alertes_budget = B.lignes.filter((l) => l.statut !== 'vert').map((l) => ({ categorie: l.categorie, depense: l.depense, budget: l.budget, pct: l.pct, niveau: l.statut }));
   }
+  const upTo = (d) => act.filter((e) => e.date <= d || e.date <= X.donnees_au).reduce((a, e) => a + e.montant, 0);
   const T = X.douze_mois;
-  if (T) ['solde_budgets', 'solde_habitudes'].forEach((k) => T[k].forEach((p) => { const t = act.filter((e) => e.date <= p[0] || e.date <= X.donnees_au).reduce((a, e) => a + e.montant, 0); p[1] = r2(p[1] - t); }));
+  if (T) ['solde_budgets', 'solde_habitudes', 'solde_hors_carte', 'patrimoine_prets', 'patrimoine_budgets', 'patrimoine_habitudes', 'patrimoine_hors_carte'].forEach((k) => (T[k] || []).forEach((p) => { if (p[0] >= X.donnees_au) p[1] = r2(p[1] - upTo(p[0])); }));
+  const H = X.hors_carte;
+  if (H) {
+    const f1 = H.fin_mois, f2 = H.fin_mois_suivant;
+    f1.depart = r2(f1.depart - upTo(X.donnees_au)); f1.solde = r2(f1.solde - upTo(f1.date));
+    f2.depart = f1.solde; const t2 = upTo(f2.date); f2.solde = r2(f2.solde - t2); f2.solde_apres_epargne = r2(f2.solde_apres_epargne - t2);
+    (H.timeline || []).forEach((t) => { if (t.solde != null) t.solde = r2(t.solde - upTo(t.date)); });
+  }
   return X;
 }
 function rebuild() { D = applyManual(clone(RAW)); render(); }
