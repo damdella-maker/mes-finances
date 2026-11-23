@@ -214,6 +214,7 @@ nav button.on svg{filter:drop-shadow(0 0 6px rgba(107,140,255,.8))}
 <script>
 'use strict';
 const LS_KEY = 'mf-code';
+const LB = () => Object.assign({ banque: 'Ma banque', partage: 'partage', conso: 'Crédit renouvelable', autres_desc: 'rentrées exceptionnelles', ponctuels_desc: 'dépenses exceptionnelles' }, (D && D.labels) || {});
 let D = null;
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -380,7 +381,7 @@ function calRow(c) {
 }
 function alertsHtml(limit) {
   const E = D.estimation, out = [];
-  if (E.decouvert) out.push(`<div class="alert rouge"><div class="ai">!</div><div><div class="at">Découvert prévu fin ${esc(E.mois.split(' ')[0])} : <span class="num">${eur(E.solde_apres_prelevements)}</span></div><div class="ax">Avant ta paie${E.prochaine_paie ? ' attendue vers le ' + pd(E.prochaine_paie.date).getDate() + ' ' + MOISL[pd(E.prochaine_paie.date).getMonth()] : ''}. Le virement interne de 150 € vers ton LEP pèse sur ton compte courant : tu peux le décaler ou le réduire.</div></div></div>`);
+  if (E.decouvert) out.push(`<div class="alert rouge"><div class="ai">!</div><div><div class="at">Découvert prévu fin ${esc(E.mois.split(' ')[0])} : <span class="num">${eur(E.solde_apres_prelevements)}</span></div><div class="ax">Avant ta paie${E.prochaine_paie ? ' attendue vers le ' + pd(E.prochaine_paie.date).getDate() + ' ' + MOISL[pd(E.prochaine_paie.date).getMonth()] : ''}. ${(D.a_venir || []).length ? 'L’opération à venir de ' + eur(Math.abs(D.a_venir[0].montant), 1) + ' (virement interne vers ton épargne) pèse sur ton compte courant : tu peux la décaler ou la réduire.' : ''}</div></div></div>`);
   (D.alertes || []).forEach((a) => out.push(`<div class="alert ${a.niveau === 'rouge' ? 'rouge' : 'orange'}"><div class="ai">${a.niveau === 'rouge' ? '!' : '↑'}</div><div><div class="at">${esc(a.titre)}</div><div class="ax">${esc(a.texte)}</div></div></div>`));
   return (limit ? out.slice(0, limit) : out).join('');
 }
@@ -394,7 +395,7 @@ function renderAccueil() {
   const eq = M.equilibre;
   $('#v-accueil').innerHTML = `
   <div class="card hero">
-    <div class="lbl"><span>Compte courant</span><span class="badge b" style="margin:0">Caisse d’Épargne</span></div>
+    <div class="lbl"><span>Compte courant</span><span class="badge b" style="margin:0">${esc(LB().banque)}</span></div>
     <div class="big ${D.solde < 0 ? 'g-neg' : 'g-acc'}"><span class="num">${splitEur(D.solde)}</span></div>
     <div class="meta">Solde au ${fdate(D.solde_date)}</div>
     <div class="chips2">
@@ -428,7 +429,7 @@ function renderAccueil() {
   <div class="card"><h3>Prochains prélèvements</h3><p class="sub">D’après tes habitudes, prêts inclus.</p>${D.calendrier.filter((c) => c.type !== 'rentree').slice(0, 6).map(calRow).join('')}</div>
   <div class="card"><h3>Évolution du solde</h3><p class="sub">Après chaque opération, du ${fdate(D.serie_solde[0][0])} au ${fdate(D.donnees_au)}.</p>${lineChart({ series: [{ pts: D.serie_solde, color: '#6b8cff' }], step: true, area: true })}</div>
   <div class="card"><h3>Ton équilibre</h3><p class="sub" style="margin-bottom:6px">Moyenne sur ${M.n_periodes} relevés, virements internes exclus.</p>
-    <div class="kv"><span>Revenu régulier <span class="mut">(salaire + Emma net)</span></span><b class="num pos">${eurS(M.regulier)}</b></div>
+    <div class="kv"><span>Revenu régulier <span class="mut">(salaire + ${esc(LB().partage)} net)</span></span><b class="num pos">${eurS(M.regulier)}</b></div>
     <div class="kv"><span>Dépenses courantes</span><b class="num neg">${eurS(-M.courante)}</b></div>
     <div class="kv"><span>Syndic lissé <span class="mut">(variable)</span></span><b class="num neg">${eurS(-M.syndic_lisse)}</b></div>
     <div class="kv total"><span><b>Reste par mois</b></span><b class="num ${glow(eq)}">${eurS(eq)}</b></div></div>
@@ -442,10 +443,10 @@ function renderBudget(vue, catp) {
   if (vue === 'moy') {
     charts = `<div class="card"><h3>Moyenne par mois</h3><p class="sub">Sur ${M.n_periodes} relevés complets, virements internes exclus.</p>
       <div class="bignum">${cu(M.equilibre, 'eurS', glow(M.equilibre))}</div><p class="sub">reste par mois après dépenses courantes et syndic lissé</p>
-      ${hbars([{ l: 'Revenu régulier', v: M.regulier, m: 'salaire ' + eur(M.salaire, 1) + ' + Emma net ' + eur(M.emma_net, 1) }, { l: 'Dépenses courantes', v: M.courante, m: 'hors ponctuels et hors internes' }, { l: 'Syndic lissé', v: M.syndic_lisse, m: 'trimestriel, montant variable' }, { l: 'Autres rentrées (ponctuelles)', v: M.autres, m: 'vente voiture, chèque, primes…' }, { l: 'Dépenses ponctuelles', v: M.ponctuel, m: 'voiture, clim, syndic' }], (v) => eur(v, 1), { dot: true })}</div>`;
+      ${hbars([{ l: 'Revenu régulier', v: M.regulier, m: 'salaire ' + eur(M.salaire, 1) + ' + ' + LB().partage + ' net ' + eur(M.partage_net, 1) }, { l: 'Dépenses courantes', v: M.courante, m: 'hors ponctuels et hors internes' }, { l: 'Syndic lissé', v: M.syndic_lisse, m: 'trimestriel, montant variable' }, { l: 'Autres rentrées (ponctuelles)', v: M.autres, m: LB().autres_desc }, { l: 'Dépenses ponctuelles', v: M.ponctuel, m: LB().ponctuels_desc }], (v) => eur(v, 1), { dot: true })}</div>`;
   } else {
-    charts = `<div class="card"><h3>Revenus</h3><p class="sub">Régulier = salaire + partage de frais Emma (net).</p>${barChart(P.map(lab), [{ name: 'Revenu régulier', values: P.map((p) => p.regulier), color: '#2ee6a6' }, { name: 'Autres rentrées', values: P.map((p) => p.autres), color: '#6b8cff' }])}</div>
-    <div class="card"><h3>Dépenses</h3><p class="sub">Courantes vs ponctuelles (voiture, clim, syndic).</p>${barChart(P.map(lab), [{ name: 'Courantes', values: P.map((p) => p.courante), color: '#ff9152' }, { name: 'Ponctuelles', values: P.map((p) => p.ponctuel), color: '#ff5d78' }])}</div>
+    charts = `<div class="card"><h3>Revenus</h3><p class="sub">Régulier = salaire + partage de frais ${esc(LB().partage)} (net).</p>${barChart(P.map(lab), [{ name: 'Revenu régulier', values: P.map((p) => p.regulier), color: '#2ee6a6' }, { name: 'Autres rentrées', values: P.map((p) => p.autres), color: '#6b8cff' }])}</div>
+    <div class="card"><h3>Dépenses</h3><p class="sub">Courantes vs ponctuelles (${esc(LB().ponctuels_desc)}).</p>${barChart(P.map(lab), [{ name: 'Courantes', values: P.map((p) => p.courante), color: '#ff9152' }, { name: 'Ponctuelles', values: P.map((p) => p.ponctuel), color: '#ff5d78' }])}</div>
     <div class="card"><h3>Synthèse ${vue === 'mois' ? 'par mois' : 'par relevé'}</h3><div class="scroll"><table><tr><th>${vue === 'mois' ? 'Mois' : 'Période'}</th><th>Régulier</th><th>Autres</th><th>Courantes</th><th>Ponct.</th><th>Net</th></tr>
     ${P.map((p) => `<tr><td>${esc(vue === 'mois' ? p.label.replace(/\s*\(.*\)/, '') : fdate(p.start).slice(0, 5) + ' → ' + fdate(p.end).slice(0, 5))}${p.full ? '' : '*'}</td><td>${eur(p.regulier, 1)}</td><td>${eur(p.autres, 1)}</td><td>${eur(p.courante, 1)}</td><td>${eur(p.ponctuel, 1)}</td><td class="${cls(p.net)}">${eurS(p.net, 1)}</td></tr>`).join('')}</table></div>
     ${P.some((p) => !p.full) ? '<p class="sub" style="margin:10px 0 0">* période incomplète</p>' : ''}</div>`;
@@ -493,9 +494,9 @@ function renderPrlv() {
     ${immo.length ? `<div class="daysep">Prêt immobilier – appartement · <span class="num">${eur(immoTot)}</span>/mois</div>` : ''}
     ${immo.map((p, i) => `<div class="row">${av('P ' + (i + 1), ['#6b8cff', '#9b6bff'][i % 2])}<div class="main"><div class="t">Ligne ${esc(p.nom.replace(/.*prêt\s*/i, ''))}</div><div class="s">vers le ${p.jour} du mois${p.dernier ? ' · dernier le ' + fdate(p.dernier.date) : ''}</div></div><div class="amt num">${eur(p.montant)}</div></div>`).join('')}
     ${conso.length ? `<div class="daysep">Crédit renouvelable</div>` : ''}
-    ${conso.map((p) => `<div class="row">${av('IZ', '#ff9152')}<div class="main"><div class="t">Izicarte</div><div class="s">${esc(p.nature || '')} · vers le ${p.jour}</div></div><div class="amt num">${eur(p.montant)}</div></div>`).join('')}
+    ${conso.map((p) => `<div class="row">${av('IZ', '#ff9152')}<div class="main"><div class="t">${esc(LB().conso)}</div><div class="s">${esc(p.nature || '')} · vers le ${p.jour}</div></div><div class="amt num">${eur(p.montant)}</div></div>`).join('')}
     <div class="kv total"><span><b>Total prêts</b></span><b class="num g-acc">${eur(D.total_prets)}</b></div>
-    ${Lg.assurance_pret ? `<p class="sub" style="margin:8px 0 0">S’y ajoute l’assurance de prêt SAS Multi Impact (${eur(Lg.assurance_pret)}/mois), comptée avec les assurances.</p>` : ''}
+    ${Lg.assurance_pret ? `<p class="sub" style="margin:8px 0 0">S’y ajoute l’assurance de prêt (${eur(Lg.assurance_pret)}/mois), comptée avec les assurances.</p>` : ''}
     <p class="sub" style="margin:6px 0 0">${D.autres_prets.length ? 'Autres débits ressemblant à un prêt : ' + D.autres_prets.map((x) => esc(x.libelle)).join(', ') : 'Aucun autre prêt détecté dans tes opérations.'}</p>
   </div>
   <div class="card"><h3>Logement</h3><p class="sub">Prêt immobilier, syndic lissé et assurances liées à l’appartement.</p>
@@ -532,10 +533,10 @@ function renderEpargne() {
   ${E.recurrent ? `<div class="card"><h3>Virement d’épargne mensuel</h3><div class="row">${av('LEP', '#2ee6a6')}<div class="main"><div class="t">${esc(E.recurrent.libelle)}</div><div class="s">vers le ${E.recurrent.jour_habituel} du mois</div></div><div class="amt num pos">${eur(E.recurrent.montant)}</div></div><p class="sub" style="margin:6px 0 0">${esc(E.recurrent.note)}</p></div>` : ''}
   <div class="card"><h3>Ce que ton épargne a financé</h3>${E.financements.map((f) => `<div class="row">${av(f.objet, '#ff9152')}<div class="main"><div class="t">${esc(f.objet)}</div><div class="s">${fdate(f.date)} · depuis ${esc(f.depuis)}</div></div><div class="amt num neg">${eurS(-f.montant)}</div></div>`).join('')}
   ${v.note ? `<p class="sub" style="margin:10px 0 0">${esc(v.note)}</p>` : ''}</div>
-  ${E.izicarte ? `<div class="alert bleu"><div class="ai">i</div><div><div class="at">Réserve Izicarte : <span class="num">${eur(E.izicarte, 1)}</span></div><div class="ax">C’est un crédit renouvelable, pas de l’épargne.</div></div></div>` : ''}
+  ${E.credit_dispo ? `<div class="alert bleu"><div class="ai">i</div><div><div class="at">Réserve de crédit renouvelable : <span class="num">${eur(E.credit_dispo, 1)}</span></div><div class="ax">C’est un crédit renouvelable, pas de l’épargne.</div></div></div>` : ''}
   <div class="card"><h3>Points à confirmer</h3>${E.doutes.map((n) => `<p class="sub" style="margin:6px 0">• ${esc(n)}</p>`).join('')}</div>`;
 }
-const KIND = { interne: ['Interne', 'b'], regulier: ['Revenu', 'g'], partage_out: ['Partage Emma', ''], autre_rentree: ['Rentrée', 'g'], ponctuel: ['Ponctuel', 'w'], courante: ['', ''], remboursement: ['Remboursement', 'g'] };
+const KIND = { interne: ['Interne', 'b'], regulier: ['Revenu', 'g'], partage_out: ['Partage de frais', ''], autre_rentree: ['Rentrée', 'g'], ponctuel: ['Ponctuel', 'w'], courante: ['', ''], remboursement: ['Remboursement', 'g'] };
 function renderOps(filter, q) {
   const root = $('#v-ops'); const ql = q.trim().toLowerCase();
   const list = D.operations.filter((o) => {
