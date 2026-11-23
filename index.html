@@ -823,14 +823,16 @@ function douzeHtml() {
   const mode = ST.m12 || 'solde', last = (a) => a[a.length - 1];
   const S = mode === 'solde'
     ? [{ name: 'Historique', color: '#818cf8', pts: T.solde_hist }, { name: 'En tenant tes budgets', color: '#34d399', pts: T.solde_budgets, dash: true }, { name: 'Au rythme habituel', color: '#f87171', pts: T.solde_habitudes, dash: true }]
-    : [{ name: 'Historique', color: '#818cf8', pts: T.patrimoine_hist }, { name: 'Prêts seuls', color: '#34d399', pts: T.patrimoine_prets, dash: true }, { name: 'Prêts + rythme budgets', color: '#c084fc', pts: T.patrimoine_budgets, dash: true }];
+    : [{ name: 'Historique', color: '#818cf8', pts: T.patrimoine_hist }, { name: 'Prêts seuls', color: '#38bdf8', pts: T.patrimoine_prets, dash: true }, { name: 'En tenant tes budgets', color: '#34d399', pts: T.patrimoine_budgets, dash: true }].concat(T.patrimoine_habitudes ? [{ name: 'Au rythme habituel', color: '#f87171', pts: T.patrimoine_habitudes, dash: true }] : []);
   const lbl = (d) => MOIS[pd(d).getMonth()] + ' ' + pd(d).getFullYear();
-  return `<div class="card"><h3>Sur 12 mois</h3><p class="sub">${mode === 'solde' ? `Solde du compte : réel depuis le ${fdate(T.debut)}, puis estimé en fin de mois (pointillés).` : 'Patrimoine net : reconstitué aux dates de relevé, puis projeté (pointillés).'}</p>
+  return `<div class="card"><h3>Sur 12 mois</h3><p class="sub" style="margin:0 0 4px">Historique + 12 fins de mois à venir.</p><p class="sub">${mode === 'solde' ? `Solde du compte : réel depuis le ${fdate(T.debut)}, puis estimé en fin de mois (pointillés).` : 'Patrimoine net : reconstitué aux dates de relevé, puis projeté (pointillés).'}</p>
     ${seg('m12', [['solde', 'Solde du compte'], ['patrimoine', 'Patrimoine net']], mode)}
     ${lineChart({ series: S, area: true, marker: T.aujourdhui, h: 190 })}
     <div class="kv"><span>Aujourd’hui</span><b class="num">${eur(mode === 'solde' ? D.solde_dispo : last(T.patrimoine_hist)[1], 1)}</b></div>
     ${S.slice(1).map((x) => `<div class="kv"><span><i style="display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:8px;background:${x.color}"></i>${esc(x.name)} · ${lbl(last(x.pts)[0])}</span><b class="num ${cls(last(x.pts)[1])}">${eurS(last(x.pts)[1], 1)}</b></div>`).join('')}
-    ${mode === 'solde' ? `<div class="kv"><span>Par mois</span><b class="num">${eurS(T.delta_budgets, 1)} / ${eurS(T.delta_habitudes, 1)}</b></div>` : ''}
+    ${T.delta_budgets_2027 != null ? `<div class="kv"><span>Par mois, budgets / habituel</span><b class="num">${eurS(T.delta_budgets)} / ${eurS(T.delta_habitudes)} <span class="mut" style="font-weight:500">en déc.</span></b></div><div class="kv"><span>Dès janvier (sans Fitness Park)</span><b class="num">${eurS(T.delta_budgets_2027)} / ${eurS(T.delta_habitudes_2027)}</b></div>` : ''}
+    ${mode === 'solde' && T.lep ? `<div class="alert bleu" style="margin-top:10px"><div class="ai">${ICON.info}</div><div><div class="at">Le virement LEP n’est pas une perte</div><div class="ax">Ces courbes ne comptent pas les virements vers le LEP. Si tu continues ${eur(T.lep.virement, 1)}/mois, le compte baisse d’autant mais le LEP monte : ${eur(T.lep.actuel, 1)} → ≈ ${eur(T.lep.apres_12, 1)} dans 12 mois. Ton patrimoine ne change pas.</div></div></div>` : ''}
+    ${mode !== 'solde' ? `<p class="sub" style="margin:8px 0 0">Les virements vers le LEP ne changent pas le patrimoine (argent déplacé du compte vers le LEP).</p>` : ''}
     <details class="hyp"><summary>Hypothèses (estimations)</summary><p class="sub">${esc(T.hypotheses)}</p></details></div>`;
 }
 
