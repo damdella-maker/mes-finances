@@ -2,8 +2,8 @@
    - met en cache la coquille (HTML, icônes, manifest) pour ouvrir l'appli hors ligne
    - data.enc (données CHIFFRÉES) : réseau d'abord, copie chiffrée en secours hors ligne
    - aucune donnée déchiffrée n'est jamais mise en cache */
-const VERSION = 'mf-v9';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
+const VERSION = 'mf-v10';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
